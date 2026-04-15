@@ -11,7 +11,7 @@
     </div>
     <div class="text-right">
       <p>&copy; 2026 StudPlace.</p>
-      <p class="text-xs mt-2 italic">Built with Svelte & Tailwind</p>
+      <p class="text-xs mt-2 italic">Built with Love</p>
     </div>
   </div>
 </footer>
