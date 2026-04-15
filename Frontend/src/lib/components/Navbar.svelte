@@ -35,6 +35,11 @@
     isAcceOpen = !isAcceOpen;
     if (isAcceOpen) isProfileOpen = false; // Close profile if accessibility opens
   }
+  function navigateTo(tabName) {
+    activeTab = tabName;      // Switches the page in App.svelte
+    isProfileOpen = false;    // Closes the dropdown
+    isAcceOpen = false;       // Closes accessibility
+  }
 </script>
 
 <nav class="bg-slate-800/80 backdrop-blur-md mx-4 p-3 rounded-b-xl flex items-center justify-between text-white shadow-xl border border-white/5 relative z-50">
@@ -168,35 +173,55 @@
           </div>
 
           <div class="p-2 flex flex-col gap-1">
+          <button 
+            onclick={() => navigateTo("Register/Log-in")} 
+            class="flex items-center gap-3 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors text-left cursor-pointer"
+          >
+            Register/Log-in
+          </button>
 
-            <button class="flex items-center gap-3 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors text-left">
-               Register/Log-in
-            </button>
+          <div class="my-1 border-t border-white/5"></div>
 
+          <button 
+            onclick={() => navigateTo("Write a Post")} 
+            class="flex items-center gap-3 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-colors text-left cursor-pointer"
+          >
+            Write a Post
+          </button>
+          
+          <button 
+            onclick={() => navigateTo("Liked Posts")} 
+            class="flex items-center gap-3 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-colors text-left cursor-pointer"
+          >
+            Liked Posts
+          </button>
+
+          <button 
+            onclick={() => navigateTo("Saved Posts")} 
+            class="flex items-center gap-3 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-colors text-left cursor-pointer"
+          >
+            Saved Posts
+          </button>
+
+          <div class="my-1 border-t border-white/5"></div>
+
+          <button 
+            onclick={() => navigateTo("Account Settings")} 
+            class="flex items-center gap-3 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors text-left cursor-pointer"
+          >
+            Account Settings
+          </button>
+
+          {#if role === "Admin"}
             <div class="my-1 border-t border-white/5"></div>
-
-            <button class="flex items-center gap-3 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-colors text-left">
-               Write a Post
+            <button 
+              onclick={() => navigateTo("Management Panel")} 
+              class="flex items-center gap-3 px-3 py-2 text-sm text-red-400 hover:text-white hover:bg-red-500/20 rounded-xl transition-colors text-left cursor-pointer"
+            >
+              Management Panel
             </button>
-            
-            <button class="flex items-center gap-3 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-colors text-left">
-               Liked Posts
-            </button>
-
-            <button class="flex items-center gap-3 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-colors text-left">
-               Saved Posts
-            </button>
-
-            <div class="my-1 border-t border-white/5"></div>
-
-            <button class="flex items-center gap-3 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors text-left">
-               Account Settings
-            </button>
-            <div class="my-1 border-t border-white/5"></div>
-            <button class="flex items-center gap-3 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors text-left">
-               Management Panel
-            </button>
-          </div>
+          {/if}
+        </div>
         </div>
 
         <button 
