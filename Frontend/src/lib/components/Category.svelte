@@ -6,7 +6,7 @@
   let active = "Technology";
 </script>
 
-<div class="mx-4 mb-6 from-[#2D364F]">
+<div class="mx-4 mb-6">
   <div class="bg-brand-card/40 backdrop-blur-sm p-2 rounded-2xl border border-white/5 flex items-center gap-2">
     
     <button class="p-2 hover:bg-white/5 rounded-xl transition-colors group">

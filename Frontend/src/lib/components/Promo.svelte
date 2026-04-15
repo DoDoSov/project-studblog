@@ -1,21 +1,13 @@
 <section class="mx-4 my-16 relative overflow-hidden">
   <div class="bg-brand-card/30 backdrop-blur-md rounded-[2.5rem] p-12 border border-white/5 flex flex-col items-center text-center relative">
-    
-    <div class="absolute top-6 left-6 opacity-20 pointer-events-none">
-      <div class="grid grid-cols-4 gap-2">
-        {#each Array(12) as _}
-          <div class="size-1 bg-white rounded-full"></div>
-        {/each}
-      </div>
-    </div>
 
     <h2 class="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">
       Ready to Share What You Know?
     </h2>
     
     <p class="text-gray-400 text-lg mb-8 max-w-xl">
-      Join <span class="text-white font-bold">1,240</span> student writers. 
-      Publish your first article in minutes — free forever.
+      Join <span class="text-white font-bold">XXXX</span> student writers. 
+      Publish your first article in minutes.
     </p>
 
     <div class="w-full max-w-md">
@@ -29,18 +21,7 @@
           Join —>
         </button>
       </div>
-      
-      <p class="mt-4 text-xs text-gray-500 font-medium tracking-wide uppercase">
-        No credit card. No paywall.
-      </p>
-    </div>
-
-    <div class="absolute bottom-6 right-6 opacity-20 pointer-events-none rotate-180">
-      <div class="grid grid-cols-4 gap-2">
-        {#each Array(12) as _}
-          <div class="size-1 bg-white rounded-full"></div>
-        {/each}
-      </div>
+    
     </div>
   </div>
 </section>

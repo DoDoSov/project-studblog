@@ -1,4 +1,5 @@
 <script>
+  import GlassyStars from './lib/components/GlassyStars.svelte';
   import Branding from './lib/components/Branding.svelte';
   import Navbar from './lib/components/Navbar.svelte';
   import Footer from './lib/components/Footer.svelte';
@@ -77,9 +78,12 @@
 
 
 <Branding />
-<div class="flex flex-col min-h-screen bg-brand-dark text-white">
-  
-  <Navbar />
+<GlassyStars />
+<Navbar />
+
+<div class="h-36"></div>
+<div class="bg-[#1A1F2E] rounded-tr-xl rounded-tl-xl flex flex-col min-h-screen bg-brand-dark text-white font-sans">
+  <div class="h-6"></div>
   <Category />
   <section class="m-4 bg-[#2D364F]/30 p-6 rounded-3xl border border-white/5">
   <div class="flex justify-between items-center mb-6">

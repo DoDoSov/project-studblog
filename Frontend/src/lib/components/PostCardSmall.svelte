@@ -1,5 +1,5 @@
 <script>
-  let { category, title, description, author, initials, likes, icon } = $props();
+  let { category, title, description, author, initials, likes, image } = $props();
 
   // Mapping categories to match the colorful text in your mockup
   const colors = {
@@ -11,10 +11,9 @@
 
 <div class="bg-brand-card/40 rounded-[2rem] p-5 border border-white/5 flex flex-col h-full hover:bg-brand-card/60 transition-all duration-300 group">
   
-  <div class="bg-black/20 rounded-2xl h-36 mb-5 flex items-center justify-center border border-white/5 relative overflow-hidden">
-     <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: radial-gradient(circle, white 1px, transparent 1px); background-size: 12px 12px;"></div>
-     
-     <img src={icon} class="size-12 group-hover:scale-110 transition-transform duration-500" alt="" />
+  <div class="relative h-48 w-full">
+    <img src={image} alt={title} class="w-full h-full object-cover" />
+    <div class="absolute inset-0 bg-gradient-to-t from-[#2D364F] to-transparent opacity-60"></div>
   </div>
 
   <span class="text-[11px] font-black tracking-widest bg-white/5 px-2 py-1 rounded-md w-fit mb-3 {colors[category]}">
