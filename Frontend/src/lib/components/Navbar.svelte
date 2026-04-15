@@ -14,20 +14,22 @@
     console.log("Searching for:", searchQuery);
   }
 
-  // --- Profile Dropdown State ---
-  let isProfileOpen = false;
+  let isProfileOpen = $state(false); 
   let nickname = "Nickname";
-  let role = "Writer";
+  let role = "Admin";
 
   function toggleProfile() {
     isProfileOpen = !isProfileOpen;
+    if (isProfileOpen) isAcceOpen = false; // Close accessibility if profile opens
   }
-  let isAcceOpen = false;
+
+  // --- Accessibility Dropdown State ---
+  let isAcceOpen = $state(false); 
   
-  // Accessibility Settings State
-  let highContrast = false;
-  let largeText = false;
-  let dyslexiaFont = false;
+  // These also need $state if you want the toggles to visually move
+  let highContrast = $state(false);
+  let largeText = $state(false);
+  let dyslexiaFont = $state(false);
 
   function toggleAcce() {
     isAcceOpen = !isAcceOpen;
@@ -166,6 +168,13 @@
           </div>
 
           <div class="p-2 flex flex-col gap-1">
+
+            <button class="flex items-center gap-3 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors text-left">
+               Register/Log-in
+            </button>
+
+            <div class="my-1 border-t border-white/5"></div>
+
             <button class="flex items-center gap-3 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-colors text-left">
                Write a Post
             </button>
@@ -182,6 +191,10 @@
 
             <button class="flex items-center gap-3 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors text-left">
                Account Settings
+            </button>
+            <div class="my-1 border-t border-white/5"></div>
+            <button class="flex items-center gap-3 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors text-left">
+               Management Panel
             </button>
           </div>
         </div>
