@@ -6,7 +6,10 @@
   
   // Views
   import HomeView from './routes/Main.svelte';
-  import ReadPage from './routes/ReadPage.svelte'; // Assuming you created this file
+  import ReadPage from './routes/ReadPage.svelte';
+  import About from './routes/About.svelte';
+  import TopBlogs from './routes/TopBlogs.svelte';
+  import Guidelines from './routes/Guidelines.svelte';
 
   // Svelte 5 state for navigation
   let currentTab = $state("Home");
@@ -22,6 +25,12 @@
     <HomeView />
   {:else if currentTab === "Read"}
     <ReadPage />
+  {:else if currentTab === "About"}
+    <About />
+  {:else if currentTab === "Top Blogs"}
+    <TopBlogs />
+  {:else if currentTab === "Guidelines"}
+    <Guidelines />
   {:else}
     <div class="h-screen flex items-center justify-center text-white/20 uppercase tracking-widest">
       {currentTab} Section Coming Soon
