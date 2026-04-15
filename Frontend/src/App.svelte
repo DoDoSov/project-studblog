@@ -5,6 +5,7 @@
   import Category from './lib/components/Category.svelte';
   import PostCard from './lib/components/PostCard.svelte';
   import PostCardSmall from './lib/components/PostCardSmall.svelte';
+  import Promo from './lib/components/Promo.svelte';
 
   const trendingPosts = [
     {
@@ -101,25 +102,20 @@
       <PostCard {...post} />
     {/each}
   </div>
+  </section>
 
-<div class="mx-4 mt-12 mb-20">
-  <div class="inline-block bg-[#1A1F2E] px-8 py-3 rounded-t-2xl border-t border-x border-white/5">
-    <span class="text-sm font-bold text-white tracking-wide">More Posts</span>
+  <section class="mx-4 mb-10 bg-brand-card/10 p-6 rounded-3xl border border-white/5">
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-xl font-bold text-white px-4 py-1 bg-white/5 rounded-lg">More Posts</h2>
   </div>
-
-  <div class="bg-brand-card/20 p-8 rounded-b-[2.5rem] rounded-tr-[2.5rem] border border-white/5">
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       {#each morePosts as post}
         <PostCardSmall {...post} />
       {/each}
     </div>
-  </div>
-</div>
-</section>
-  <main class="flex-grow p-8">
-    <h1 class="text-4xl font-bold text-center">Trending Content will go here...</h1>
-    
-    </main>
+  </section>
+
+  <Promo />
 
   <Footer />
 </div>

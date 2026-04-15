@@ -29,17 +29,15 @@
   </p>
 
   <div class="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <div class="size-9 rounded-full flex items-center justify-center text-xs font-bold text-white
-        {category === 'HEALTH' ? 'bg-[#4ADE80]/80' : category === 'FINANCE' ? 'bg-[#FACC15]/80' : 'bg-[#2DD4BF]/80'}">
-        {initials}
+    <div class="mt-auto flex items-center justify-between pt-4 border-t border-white/10">
+      <div class="flex gap-4 opacity-70">
+        <button class="hover:text-blue-400">🔗</button>
+        <button class="hover:text-yellow-400">🔖</button>
+        <button class="hover:text-red-400">❤️</button>
       </div>
-      <span class="text-gray-400 text-sm font-semibold">{author}</span>
-    </div>
-    
-    <div class="flex items-center gap-1.5 text-gray-500 text-xs font-mono">
-      <span class="text-lg">♡</span>
-      <span>{likes}</span>
+      <button class="bg-white text-black text-xs font-bold px-4 py-2 rounded-full hover:bg-gray-200 transition">
+        Read
+      </button>
     </div>
   </div>
 </div>
