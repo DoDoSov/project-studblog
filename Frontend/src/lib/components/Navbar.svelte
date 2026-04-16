@@ -108,7 +108,7 @@
     </div>
 
     <div class="relative">
-      <button onclick={toggleProfile} class="bg-purple-600/30 p-2 rounded-full hover:bg-purple-600/50 border border-purple-500/20 {isProfileOpen ? 'ring-2 ring-purple-500' : ''}">
+      <button onclick={toggleProfile} class="bg-blue-600/30 p-2 rounded-full hover:bg-blue-600/50 border border-blue-700/20 {isProfileOpen ? 'ring-2 ring-blue-500' : ''}">
         <img src={UserIcon} class="size-5 brightness-200" alt="" />
       </button>
 
@@ -116,7 +116,7 @@
         <div class="absolute right-0 mt-3 w-64 bg-[#1A1F2E] rounded-2xl border border-white/10 shadow-2xl z-[110] flex flex-col overflow-hidden">
           <div class="p-4 border-b border-white/5 bg-white/5">
             <p class="text-sm font-bold text-white">{nickname}</p>
-            <p class="text-[10px] text-purple-400 uppercase tracking-widest">{role}</p>
+            <p class="text-[10px] text-blue-500 uppercase tracking-widest">{role}</p>
           </div>
           <div class="p-2 flex flex-col gap-1">
             <button onclick={() => navigateTo("Register/Log-in")} class="w-full text-left px-3 py-2 text-sm text-gray-400 hover:bg-white/5 rounded-lg transition-colors">Login</button>
