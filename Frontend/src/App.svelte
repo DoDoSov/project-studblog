@@ -18,15 +18,18 @@
   import PostWrite from './routes/User/Posts.svelte';
   import AdminPanel from './routes/User/Management.svelte';
   import Login from './routes/User/Login.svelte';
-    import PostCard from './lib/components/PostCard.svelte';
+  
+  import LegalModal from './lib/components/LegalModal.svelte';
 
   // Svelte 5 state for navigation
   let currentTab = $state("Home");
+
+  let currentModal = $state(null); // 'privacy', 'terms', or null
 </script>
 
 <Branding />
 <GlassyStars />
-
+<LegalModal bind:type={currentModal} />
 <Navbar bind:activeTab={currentTab} />
 
 <main>
@@ -58,9 +61,7 @@
     </div>
   {/if}
 </main>
-
-<Footer />
-
+<Footer bind:openModal={currentModal} />
 <style lang="postcss">
   @reference "tailwindcss";
 </style>

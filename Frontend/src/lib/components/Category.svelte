@@ -7,7 +7,7 @@
 </script>
 
 <div class="mx-4 mb-6">
-  <div class="bg-brand-card/40 backdrop-blur-sm p-2 rounded-2xl border border-white/5 flex items-center gap-2">
+  <div class="bg-brand-card/40 backdrop-blur-sm p-2 rounded-2xl border bg-[#2D364F]/30 border-white/5 flex items-center gap-2">
     
     <button class="p-2 hover:bg-white/5 rounded-xl transition-colors group">
       <img src={LeftArrow} class="size-4 opacity-50 group-hover:opacity-100 brightness-200" alt="Prev" />

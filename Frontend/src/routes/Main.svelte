@@ -24,7 +24,7 @@
 </script>
 
 <div class="h-36"></div>
-<div class="bg-[#1A1F2E] rounded-tr-[3rem] rounded-tl-[3rem] flex flex-col min-h-screen text-white font-sans shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
+<div class="bg-[#1A1F2E] rounded-b-[3rem] rounded-t-[3rem] flex flex-col min-h-screen text-white font-sans">
   <div class="h-6"></div>
   <Category />
 
@@ -39,7 +39,7 @@
     </div>
   </section>
 
-  <section class="mx-4 mb-10 bg-brand-card/10 p-6 rounded-3xl border border-white/5">
+  <section class="mx-4 mb-10 bg-[#2D364F]/30 bg-brand-card/10 p-6 rounded-3xl border border-white/5">
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-xl font-bold text-white px-4 py-1 bg-white/5 rounded-lg">Latest</h2>
     </div>
@@ -50,7 +50,7 @@
     </div>
   </section>
 
-  <section class="mx-4 mb-10 bg-brand-card/10 p-6 rounded-3xl border border-white/5">
+  <section class="mx-4 bg-[#2D364F]/30 bg-brand-card/10 p-6 rounded-3xl border border-white/5">
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-xl font-bold text-white px-4 py-1 bg-white/5 rounded-lg">More Posts</h2>
     </div>

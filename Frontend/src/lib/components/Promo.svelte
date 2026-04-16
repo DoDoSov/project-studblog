@@ -1,5 +1,5 @@
-<section class="mx-4 my-16 relative overflow-hidden">
-  <div class="bg-brand-card/30 backdrop-blur-md rounded-[2.5rem] p-12 border border-white/5 flex flex-col items-center text-center relative">
+<section class="mx-4  my-16 relative overflow-hidden">
+  <div class="bg-brand-card/30 bg-[#2D364F]/30 backdrop-blur-md rounded-[2.5rem] p-12 border border-white/5 flex flex-col items-center text-center relative">
 
     <h2 class="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">
       Ready to Share What You Know?

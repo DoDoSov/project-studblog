@@ -3,65 +3,57 @@
   import AcceIcon from '../../assets/Navbar/accessibility.svg';
   import SearchIcon from '../../assets/Navbar/search.svg';
 
-  // --- Navigation State ---
   let { activeTab = $bindable("Home") } = $props();
   const menuItems = ["Home", "Read", "Top Blogs", "Guidelines", "About"];
 
-  // --- Search State ---
-  let searchQuery = "";
-
-  function handleSearch() {
-    console.log("Searching for:", searchQuery);
-  }
-
+  let searchQuery = $state("");
   let isProfileOpen = $state(false); 
+  let isAcceOpen = $state(false);
+  let isMobileMenuOpen = $state(false);
+
   let nickname = "Nickname";
   let role = "Admin";
 
-  function toggleProfile() {
-    isProfileOpen = !isProfileOpen;
-    if (isProfileOpen) isAcceOpen = false; // Close accessibility if profile opens
-  }
-
-  // --- Accessibility Dropdown State ---
-  let isAcceOpen = $state(false); 
-  
-  // These also need $state if you want the toggles to visually move
+  // Accessibility States
   let highContrast = $state(false);
   let largeText = $state(false);
   let dyslexiaFont = $state(false);
 
+  function toggleProfile() {
+    isProfileOpen = !isProfileOpen;
+    if (isProfileOpen) { isAcceOpen = false; isMobileMenuOpen = false; }
+  }
+
   function toggleAcce() {
     isAcceOpen = !isAcceOpen;
-    if (isAcceOpen) isProfileOpen = false; // Close profile if accessibility opens
+    if (isAcceOpen) { isProfileOpen = false; isMobileMenuOpen = false; }
   }
+
   function navigateTo(tabName) {
-    activeTab = tabName;      // Switches the page in App.svelte
-    isProfileOpen = false;    // Closes the dropdown
-    isAcceOpen = false;       // Closes accessibility
+    activeTab = tabName;
+    isProfileOpen = false;
+    isAcceOpen = false;
+    isMobileMenuOpen = false;
   }
 </script>
 
-<nav class="bg-slate-800/80 backdrop-blur-md mx-4 p-3 rounded-b-xl flex items-center justify-between text-white shadow-xl border border-white/5 relative z-50">
+<nav class="bg-slate-800/80 backdrop-blur-md mx-2 md:mx-4 p-3 rounded-b-xl flex items-center justify-between text-white shadow-xl border border-white/5 relative z-[100]">
   
-  <div class="flex items-center gap-6">
-    <button 
-      onclick={() => activeTab = "Home"}
-      class="bg-slate-700 px-6 py-2 rounded-xl font-bold tracking-tight hover:bg-slate-600 transition-colors cursor-pointer"
-    >
+  <div class="flex items-center gap-2 md:gap-6">
+    <button onclick={() => isMobileMenuOpen = !isMobileMenuOpen} class="md:hidden p-2 hover:bg-white/5 rounded-lg">
+        <div class="w-5 h-0.5 bg-white mb-1"></div>
+        <div class="w-5 h-0.5 bg-white mb-1"></div>
+        <div class="w-5 h-0.5 bg-white"></div>
+    </button>
+
+    <button onclick={() => navigateTo("Home")} class="bg-slate-700 px-4 py-2 rounded-xl font-bold hover:bg-slate-600 transition-colors cursor-pointer">
       Logo
     </button>
     
-    <ul class="flex items-center gap-2 text-sm font-medium">
+    <ul class="hidden md:flex items-center gap-2 text-sm font-medium">
       {#each menuItems as item}
         <li>
-          <button 
-            onclick={() => activeTab = item}
-            class="transition-all duration-200 cursor-pointer rounded-lg px-4 py-1.5
-            {activeTab === item 
-              ? 'bg-white/10 text-white shadow-inner' 
-              : 'text-gray-400 hover:text-white hover:bg-white/5'}"
-          >
+          <button onclick={() => navigateTo(item)} class="px-4 py-1.5 rounded-lg {activeTab === item ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'}">
             {item}
           </button>
         </li>
@@ -69,167 +61,86 @@
     </ul>
   </div>
 
-  <div class="flex items-center gap-3">
-    
-    <div class="relative sm:block">
-      <input 
-        type="text" 
-        bind:value={searchQuery}
-        oninput={handleSearch}
-        placeholder="Search" 
-        class="bg-slate-700 rounded-full py-1.5 pl-10 pr-4 text-sm outline-none w-48 focus:ring-2 ring-blue-500/50 transition-all text-white placeholder:text-gray-400"
-      />
-      <img src={SearchIcon} class="absolute left-3 top-2.5 size-4 opacity-60 pointer-events-none" alt="" />
+  <div class="flex items-center gap-2 md:gap-3">
+    <div class="relative flex items-center">
+    <input 
+      type="text" 
+      bind:value={searchQuery}
+      placeholder="Search" 
+      class="bg-slate-700 rounded-full py-1.5 pl-9 pr-4 text-sm outline-none 
+             w-24 sm:w-40 lg:w-64 
+             focus:w-44 sm:focus:w-64 lg:focus:w-80 
+             transition-all duration-300 text-white placeholder:text-gray-400 
+             border border-white/5 focus:border-blue-500/50"
+    />
+    <div class="absolute left-3 flex items-center pointer-events-none">
+      <img src={SearchIcon} class="size-4 opacity-50 brightness-200" alt="" />
     </div>
+  </div>
 
     <div class="relative">
-  <button 
-    onclick={toggleAcce}
-    class="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer group {isAcceOpen ? 'bg-white/10' : ''}"
-  >
-    <img src={AcceIcon} class="size-5 brightness-200 opacity-70 group-hover:opacity-100" alt="Accessibility" />
-  </button>
+      <button onclick={toggleAcce} class="p-2 hover:bg-white/10 rounded-full group {isAcceOpen ? 'bg-white/10' : ''}">
+        <img src={AcceIcon} class="size-5 brightness-200 opacity-70" alt="" />
+      </button>
 
-  {#if isAcceOpen}
-    <div class="absolute right-0 mt-3 w-72 bg-[#1A1F2E] rounded-2xl border border-white/10 shadow-2xl z-50 overflow-hidden">
-      
-      <div class="p-4 border-b border-white/5 bg-white/5">
-        <p class="text-sm font-bold text-white">Accessibility Settings</p>
-        <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider">Optimize your experience</p>
-      </div>
-
-      <div class="p-3 flex flex-col gap-2">
-        
-        <div class="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-white/5 transition-colors">
-          <div class="flex flex-col">
-            <span class="text-sm text-gray-200 font-medium">High Contrast</span>
-            <span class="text-[10px] text-gray-500">Sharper colors & borders</span>
+      {#if isAcceOpen}
+        <div class="absolute right-0 mt-3 w-72 bg-[#1A1F2E] rounded-2xl border border-white/10 shadow-2xl z-[110] overflow-visible">
+          <div class="p-4 border-b border-white/5 bg-white/5 rounded-t-2xl">
+            <p class="text-sm font-bold text-white">Accessibility</p>
           </div>
-          <button 
-            onclick={() => highContrast = !highContrast}
-            class="w-10 h-5 rounded-full transition-colors relative {highContrast ? 'bg-blue-500' : 'bg-slate-700'}"
-          >
-            <div class="absolute top-1 left-1 size-3 bg-white rounded-full transition-transform {highContrast ? 'translate-x-5' : ''}"></div>
-          </button>
-        </div>
-
-        <div class="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-white/5 transition-colors">
-          <div class="flex flex-col">
-            <span class="text-sm text-gray-200 font-medium">Large Text</span>
-            <span class="text-[10px] text-gray-500">Increase font sizes</span>
+          <div class="p-3 flex flex-col gap-2">
+            <button onclick={() => highContrast = !highContrast} class="flex items-center justify-between w-full p-2 hover:bg-white/5 rounded-xl transition-colors">
+              <span class="text-xs text-gray-300">High Contrast</span>
+              <div class="w-8 h-4 rounded-full relative {highContrast ? 'bg-blue-500' : 'bg-slate-700'}">
+                <div class="absolute top-0.5 left-0.5 size-3 bg-white rounded-full transition-transform {highContrast ? 'translate-x-4' : ''}"></div>
+              </div>
+            </button>
+            <button onclick={() => dyslexiaFont = !dyslexiaFont} class="flex items-center justify-between w-full p-2 hover:bg-white/5 rounded-xl transition-colors">
+              <span class="text-xs text-gray-300">Dyslexia Font</span>
+              <div class="w-8 h-4 rounded-full relative {dyslexiaFont ? 'bg-blue-500' : 'bg-slate-700'}">
+                <div class="absolute top-0.5 left-0.5 size-3 bg-white rounded-full transition-transform {dyslexiaFont ? 'translate-x-4' : ''}"></div>
+              </div>
+            </button>
           </div>
-          <button 
-            onclick={() => largeText = !largeText}
-            class="w-10 h-5 rounded-full transition-colors relative {largeText ? 'bg-blue-500' : 'bg-slate-700'}"
-          >
-            <div class="absolute top-1 left-1 size-3 bg-white rounded-full transition-transform {largeText ? 'translate-x-5' : ''}"></div>
-          </button>
         </div>
-
-        <div class="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-white/5 transition-colors">
-          <div class="flex flex-col">
-            <span class="text-sm text-gray-200 font-medium">Dyslexia Font</span>
-            <span class="text-[10px] text-gray-500">Easier to read typeface</span>
-          </div>
-          <button 
-            onclick={() => dyslexiaFont = !dyslexiaFont}
-            class="w-10 h-5 rounded-full transition-colors relative {dyslexiaFont ? 'bg-blue-500' : 'bg-slate-700'}"
-          >
-            <div class="absolute top-1 left-1 size-3 bg-white rounded-full transition-transform {dyslexiaFont ? 'translate-x-5' : ''}"></div>
-          </button>
-        </div>
-
-      </div>
-
-      <div class="p-3 bg-white/5 border-t border-white/5">
-        <button class="w-full py-2 text-xs font-bold text-gray-400 hover:text-white transition-colors">
-          Reset to Default
-        </button>
-      </div>
-    </div>
-
-        <button 
-          onclick={toggleAcce}
-          class="fixed inset-0 h-full w-full cursor-default z-40 bg-transparent"
-          tabindex="-1">
-        </button>
+        <button onclick={toggleAcce} class="fixed inset-0 z-[105] cursor-default bg-transparent w-full h-full" tabindex="-1"></button>
       {/if}
     </div>
 
     <div class="relative">
-      <button 
-        onclick={toggleProfile}
-        class="bg-purple-600/30 p-2 rounded-full hover:bg-purple-600/50 transition-all cursor-pointer border border-purple-500/20 active:scale-95"
-      >
-        <img src={UserIcon} class="size-5 brightness-200" alt="User Profile" />
+      <button onclick={toggleProfile} class="bg-purple-600/30 p-2 rounded-full hover:bg-purple-600/50 border border-purple-500/20 {isProfileOpen ? 'ring-2 ring-purple-500' : ''}">
+        <img src={UserIcon} class="size-5 brightness-200" alt="" />
       </button>
 
       {#if isProfileOpen}
-        <div class="absolute right-0 mt-3 w-64 bg-[#1A1F2E] rounded-2xl border border-white/10 shadow-2xl z-50 overflow-hidden">
-          
+        <div class="absolute right-0 mt-3 w-64 bg-[#1A1F2E] rounded-2xl border border-white/10 shadow-2xl z-[110] flex flex-col overflow-hidden">
           <div class="p-4 border-b border-white/5 bg-white/5">
             <p class="text-sm font-bold text-white">{nickname}</p>
-            <p class="text-[10px] font-medium text-purple-400 tracking-widest uppercase mt-0.5">{role}</p>
+            <p class="text-[10px] text-purple-400 uppercase tracking-widest">{role}</p>
           </div>
-
           <div class="p-2 flex flex-col gap-1">
-          <button 
-            onclick={() => navigateTo("Register/Log-in")} 
-            class="flex items-center gap-3 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors text-left cursor-pointer"
-          >
-            Register/Log-in
-          </button>
-
-          <div class="my-1 border-t border-white/5"></div>
-
-          <button 
-            onclick={() => navigateTo("Write a Post")} 
-            class="flex items-center gap-3 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-colors text-left cursor-pointer"
-          >
-            Write a Post
-          </button>
-          
-          <button 
-            onclick={() => navigateTo("Liked Posts")} 
-            class="flex items-center gap-3 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-colors text-left cursor-pointer"
-          >
-            Liked Posts
-          </button>
-
-          <button 
-            onclick={() => navigateTo("Saved Posts")} 
-            class="flex items-center gap-3 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-colors text-left cursor-pointer"
-          >
-            Saved Posts
-          </button>
-
-          <div class="my-1 border-t border-white/5"></div>
-
-          <button 
-            onclick={() => navigateTo("Account Settings")} 
-            class="flex items-center gap-3 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors text-left cursor-pointer"
-          >
-            Account Settings
-          </button>
-
-          {#if role === "Admin"}
-            <div class="my-1 border-t border-white/5"></div>
-            <button 
-              onclick={() => navigateTo("Management Panel")} 
-              class="flex items-center gap-3 px-3 py-2 text-sm text-red-400 hover:text-white hover:bg-red-500/20 rounded-xl transition-colors text-left cursor-pointer"
-            >
-              Management Panel
-            </button>
-          {/if}
+            <button onclick={() => navigateTo("Register/Log-in")} class="w-full text-left px-3 py-2 text-sm text-gray-400 hover:bg-white/5 rounded-lg transition-colors">Login</button>
+            <div class="border-t border-white/5 my-1"></div>
+            <button onclick={() => navigateTo("Write a Post")} class="w-full text-left px-3 py-2 text-sm text-gray-200 hover:bg-white/5 rounded-lg transition-colors">Write Post</button>
+            <button onclick={() => navigateTo("Liked Posts")} class="w-full text-left px-3 py-2 text-sm text-gray-200 hover:bg-white/5 rounded-lg transition-colors">Liked Posts</button>
+            <button onclick={() => navigateTo("Saved Posts")} class="w-full text-left px-3 py-2 text-sm text-gray-200 hover:bg-white/5 rounded-lg transition-colors">Saved Posts</button>
+            <div class="border-t border-white/5 my-1"></div>
+            <button onclick={() => navigateTo("Account Settings")} class="w-full text-left px-3 py-2 text-sm text-gray-400 hover:bg-white/5 rounded-lg transition-colors">Settings</button>
+            {#if role === "Admin"}
+              <button onclick={() => navigateTo("Management Panel")} class="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors">Admin Panel</button>
+            {/if}
+          </div>
         </div>
-        </div>
-
-        <button 
-          onclick={toggleProfile}
-          class="fixed inset-0 h-full w-full cursor-default z-40 bg-transparent outline-none"
-          tabindex="-1">
-        </button>
+        <button onclick={toggleProfile} class="fixed inset-0 z-[105] cursor-default bg-transparent w-full h-full" tabindex="-1"></button>
       {/if}
     </div>
   </div>
+
+  {#if isMobileMenuOpen}
+    <div class="absolute top-full left-0 right-0 mt-2 bg-[#1A1F2E] rounded-2xl border border-white/10 mx-2 p-2 flex flex-col gap-1 md:hidden shadow-2xl z-[110]">
+        {#each menuItems as item}
+            <button onclick={() => navigateTo(item)} class="w-full text-left px-4 py-3 rounded-xl hover:bg-white/5">{item}</button>
+        {/each}
+    </div>
+  {/if}
 </nav>
