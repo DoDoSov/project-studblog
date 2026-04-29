@@ -1,9 +1,9 @@
 <script>
   // Svelte 5 state for form management
-  let name = $state("John Doe");
+  let name = $state("Daniil");
   let nickname = $state("Nickname");
-  let email = $state("john.doe@university.edu");
-  let bio = $state("Computer Science student at TU Delft. Passionate about AI and web design.");
+  let email = $state("daniil@university.edu");
+  let bio = $state("Computer Science student. Passionate about AI and web design.");
   
   // Handlers
   function handleSave() {
@@ -17,10 +17,10 @@
 
 <div class="h-32"></div>
 
-<section class="max-w-5xl mx-auto px-6 mb-20 animate-in fade-in slide-in-from-bottom-6 duration-700">
-  
+<section class=" bg-[#283047] rounded-2xl max-w-5xl mx-auto px-6 mb-20 animate-in fade-in slide-in-from-bottom-6 duration-700">
+  <div class="h-4"></div>
   <div class="mb-10">
-    <p class="text-[10px] font-black text-purple-400 tracking-widest uppercase mb-2">Personalization</p>
+    <p class="text-[10px] font-black text-blue-400 tracking-widest uppercase mb-2">Personalization</p>
     <h1 class="text-4xl font-bold text-white">Account Settings</h1>
   </div>
 
@@ -28,7 +28,7 @@
     
     <div class="bg-[#1A1F2E] p-8 rounded-[2.5rem] border border-white/5 flex flex-col items-center text-center shadow-2xl">
       <div class="relative group cursor-pointer" onclick={handleAvatarChange}>
-        <div class="size-32 bg-purple-600 rounded-full flex items-center justify-center text-4xl text-white font-bold mb-6 border-4 border-white/5 group-hover:brightness-75 transition-all">
+        <div class="size-32 bg-blue-600 rounded-full flex items-center justify-center text-4xl text-white font-bold mb-6 border-4 border-white/5 group-hover:brightness-75 transition-all">
           JD
         </div>
         <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -37,7 +37,7 @@
       </div>
       
       <h2 class="text-xl font-bold text-white mb-1">{nickname}</h2>
-      <p class="text-xs text-purple-400 font-black uppercase tracking-widest mb-6">Writer</p>
+      <p class="text-xs text-blue-400 font-black uppercase tracking-widest mb-6">Writer</p>
       
       <div class="w-full pt-6 border-t border-white/5">
         <p class="text-[10px] text-gray-500 uppercase font-bold mb-2">Bio</p>
@@ -80,11 +80,12 @@
 
       <div class="flex justify-end gap-4">
         <button class="px-8 py-3 rounded-xl text-sm font-bold text-gray-500 hover:text-white transition-colors">Discard</button>
-        <button onclick={handleSave} class="px-8 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-purple-900/20 transition-all active:scale-95">
+        <button onclick={handleSave} class="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-purple-900/20 transition-all active:scale-95">
           Save Changes
         </button>
       </div>
 
     </div>
+    <div class="h-4"></div>
   </div>
 </section>

@@ -17,10 +17,10 @@
     { id: "04", title: "Nginx vs Apache: Real Tests", cat: "DevOps" }
   ];
 </script>
-
-<div class="space-y-10 animate-in fade-in duration-500">
+<div class="h-32"></div>
+<div class="bg-[#283047] rounded-2xl py-4space-y-10 animate-in fade-in duration-500">
   
-  <section class="bg-[#1A1F2E] p-8 rounded-[2.5rem] border border-white/5 shadow-2xl">
+  <section class="p-8">
     <div class="mb-8">
       <span class="text-[10px] font-black text-yellow-400 tracking-[0.2em] uppercase">Editor's Picks</span>
       <h1 class="text-4xl font-bold text-white mt-2">Featured Articles</h1>
@@ -67,13 +67,6 @@
       </div>
     </div>
   </section>
-
-  <div class="flex items-center gap-4 px-4 overflow-x-auto pb-2 no-scrollbar">
-    <button class="bg-white text-black px-6 py-2 rounded-full text-sm font-bold">All Posts</button>
-    <button class="bg-white/5 hover:bg-white/10 px-6 py-2 rounded-full text-sm font-medium border border-white/5 transition-colors">Technology</button>
-    <button class="bg-white/5 hover:bg-white/10 px-6 py-2 rounded-full text-sm font-medium border border-white/5 transition-colors">Productivity</button>
-    <button class="bg-white/5 hover:bg-white/10 px-6 py-2 rounded-full text-sm font-medium border border-white/5 transition-colors">Health</button>
-  </div>
 
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
     </div>

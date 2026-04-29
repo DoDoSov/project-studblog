@@ -29,12 +29,12 @@
 
 <div class="h-32"></div>
 
-<section class="max-w-6xl mx-auto px-6 mb-20 animate-in fade-in slide-in-from-bottom-6 duration-700">
+<section class="bg-[#283047] py-4 rounded-2xl max-w-6xl mx-auto px-6 mb-20 animate-in fade-in slide-in-from-bottom-6 duration-700">
   <div class="bg-[#1A1F2E] p-10 md:p-16 rounded-[3rem] border border-white/5 shadow-2xl mb-12 relative overflow-hidden">
     <div class="relative z-10 max-w-2xl">
-      <p class="text-[10px] font-black text-yellow-400 tracking-[0.2em] uppercase mb-4">How it works</p>
+      <p class="text-[10px] font-black text-blue-400 tracking-[0.2em] uppercase mb-4">How it works</p>
       <h1 class="text-5xl md:text-6xl font-serif font-bold text-white leading-tight mb-6">
-        Built for Students, <br/>By Students
+        Built for Students
       </h1>
       <p class="text-gray-400 text-lg leading-relaxed">
         StudBlogs is modeled after the best parts of Dev.to and Hackernoon — open, community-driven, and free. We provide a space for academic insights and student life.
@@ -47,7 +47,7 @@
     {#each steps as step}
       <div class="bg-[#1A1F2E] p-8 rounded-[2rem] border border-white/5 hover:border-white/20 transition-all group">
         <div class="text-4xl mb-6 group-hover:scale-110 transition-transform duration-300 inline-block">{step.icon}</div>
-        <p class="text-[10px] font-black text-green-400 tracking-widest uppercase mb-2">{step.id}</p>
+        <p class="text-[10px] font-black text-blue-400 tracking-widest uppercase mb-2">{step.id}</p>
         <h3 class="text-xl font-bold text-white mb-4">{step.title}</h3>
         <p class="text-gray-400 text-sm leading-relaxed">{step.desc}</p>
       </div>

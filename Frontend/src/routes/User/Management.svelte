@@ -20,7 +20,7 @@
         {#each [1, 2, 3] as i}
           <div class="bg-black/20 p-4 rounded-2xl border border-white/5 flex items-center justify-between">
             <div class="flex gap-4 items-center">
-              <div class="size-10 bg-white/5 rounded-lg flex items-center justify-center text-xl">📄</div>
+              <div class="size-10 bg-white/5 rounded-lg flex items-center justify-center text-xl">Review</div>
               <div>
                 <p class="text-sm font-bold text-white">The Future of AI in Design</p>
                 <p class="text-[10px] text-gray-500 uppercase">By Alex R. • 5 min read</p>

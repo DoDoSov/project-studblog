@@ -10,8 +10,8 @@
 
 <div class="h-32"></div>
 
-<section class="max-w-7xl mx-auto px-6 mb-20 space-y-12">
-  
+<section class=" bg-[#283047] rounded-2xl py-4 max-w-7xl mx-auto px-6 mb-20 space-y-12">
+  <div class="mt-4"></div>
   <div>
     <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
       <span class="text-purple-500">★</span> Recommended for You
@@ -37,4 +37,5 @@
       <div class="bg-white/5 h-48 rounded-2xl animate-pulse"></div>
     </div>
   </div>
+  <div class="mb-4"></div>
 </section>

@@ -19,21 +19,23 @@
 
 <div class="h-32"></div>
 
-<section class="max-w-7xl mx-auto px-6 mb-20 animate-in fade-in slide-in-from-bottom-6 duration-700">
+<section class="max-w-7xl bg-[#283047] rounded-2xl mx-auto px-6 mb-20 animate-in fade-in slide-in-from-bottom-6 duration-700">
   
+  <div class="h-4"></div>
+
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
     <div class="lg:col-span-2 bg-[#1A1F2E] p-10 rounded-[2.5rem] border border-white/5 shadow-2xl flex flex-col justify-center relative overflow-hidden">
       <div class="relative z-10">
-        <p class="text-[10px] font-black text-green-400 tracking-[0.2em] uppercase mb-4">Creator Studio</p>
+        <p class="text-[10px] font-black text-blue-400 tracking-[0.2em] uppercase mb-4">Creator Studio</p>
         <h1 class="text-4xl font-bold text-white mb-4">Your Stories</h1>
         <p class="text-gray-400 max-w-md">Manage your drafts, view analytics, and share your knowledge with the student community.</p>
       </div>
-      <span class="absolute -right-4 -bottom-10 text-[180px] opacity-5 pointer-events-none">✍️</span>
+      <span class="absolute -right-4 -bottom-10 text-[180px] opacity-5 pointer-events-none">Write</span>
     </div>
 
     <button 
       onclick={handleCreate}
-      class="bg-purple-600 hover:bg-purple-500 transition-all rounded-[2.5rem] flex flex-col items-center justify-center p-10 group cursor-pointer shadow-xl shadow-purple-900/20"
+      class="bg-blue-600 hover:bg-blue-500 transition-all rounded-[2.5rem] flex flex-col items-center justify-center p-10 group cursor-pointer shadow-xl shadow-purple-900/20"
     >
       <div class="size-16 bg-white/20 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
         <span class="text-3xl text-white">+</span>
@@ -71,23 +73,25 @@
               class="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all border border-white/5 text-gray-300 hover:text-white"
               title="Edit Post"
             >
-              <div class="size-4">edit2</div>
+              <div class="">Edit</div>
             </button>
             <button 
               class="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all border border-white/5 text-gray-300 hover:text-white"
               title="View Analytics"
             >
-              <div class="size-4">eye</div>
+              <div class="">View</div>
             </button>
             <button 
               class="p-3 bg-red-500/10 hover:bg-red-500/20 rounded-xl transition-all border border-red-500/10 text-red-400"
               title="Delete Post"
             >
-              <div class="size-4">Trash</div>
+              <div class="">Delete</div>
             </button>
           </div>
         </div>
       {/each}
     </div>
+    
   </div>
+  <div class="h-4"></div>
 </section>

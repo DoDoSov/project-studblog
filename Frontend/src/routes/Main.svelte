@@ -29,7 +29,7 @@
 
 <div class="h-32"></div>
 
-<div class="bg-[#283047] rounded-2xl max-w-7xl mx-auto px-4 md:px-6 flex flex-col gap-12 pb-20 text-white font-sans">
+<div class="bg-[#1b2236] rounded-2xl max-w-7xl mx-auto px-4 md:px-6 flex flex-col gap-12 pb-20 text-white font-sans">
   <div class="h-4"></div>
   <Category onSelect={handleCategoryChange} />
 

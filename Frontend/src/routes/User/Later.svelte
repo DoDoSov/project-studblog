@@ -11,7 +11,8 @@
 </script>
 
 <div class="h-32"></div>
-<section class="max-w-5xl mx-auto px-6 mb-20 animate-in fade-in slide-in-from-bottom-6 duration-700">
+<section class="rounded-2xl bg-[#283047] max-w-5xl mx-auto px-6 mb-20 animate-in fade-in slide-in-from-bottom-6 duration-700">
+<div class="h-4"></div>
   <div class="mb-10 flex items-center justify-between">
     <div>
       <p class="text-[10px] font-black text-blue-400 tracking-widest uppercase mb-2">Your Library</p>
@@ -47,4 +48,5 @@
       </div>
     {/each}
   </div>
+  <div class="h-4"></div>
 </section>

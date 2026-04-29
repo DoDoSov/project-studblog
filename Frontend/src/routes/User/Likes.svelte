@@ -6,9 +6,10 @@
 </script>
 
 <div class="h-32"></div>
-<section class="max-w-5xl mx-auto px-6 mb-20">
+<section class="bg-[#283047] rounded-2xl max-w-5xl mx-auto px-6 mb-20">
+<div class="h-4"></div>
   <div class="mb-10">
-    <p class="text-[10px] font-black text-red-400 tracking-widest uppercase mb-2">Interactions</p>
+    <p class="text-[10px] font-black text-blue-400 tracking-widest uppercase mb-2">Interactions</p>
     <h1 class="text-4xl font-bold text-white">Liked Content</h1>
   </div>
 
@@ -23,13 +24,14 @@
           <h2 class="text-xl font-bold text-white mb-6 leading-tight">{post.title}</h2>
           <div class="flex justify-between items-center">
             <span class="text-[10px] text-gray-600 font-bold uppercase">{post.date}</span>
-            <button class="text-[10px] font-black text-white hover:text-red-400 uppercase tracking-widest transition-colors">
+            <button class="text-[10px] font-black text-white hover:text-blue-400 uppercase tracking-widest transition-colors">
               View Post →
             </button>
           </div>
         </div>
-        <span class="absolute -right-4 -bottom-4 text-7xl opacity-[0.03] group-hover:scale-125 transition-transform duration-700">❤️</span>
+      
       </div>
     {/each}
   </div>
+  <div class="h-4"></div>
 </section>

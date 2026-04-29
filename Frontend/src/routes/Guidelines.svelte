@@ -14,7 +14,7 @@
 
 <div class="h-32"></div>
 
-<section class="max-w-6xl mx-auto px-6 mb-20 animate-in fade-in slide-in-from-bottom-6 duration-700">
+<section class="bg-[#283047] rounded-2xl py-4 max-w-6xl mx-auto px-6 mb-20 animate-in fade-in slide-in-from-bottom-6 duration-700">
   <div class="mb-12">
     <p class="text-[10px] font-black text-blue-400 tracking-widest uppercase mb-2">Community Standards</p>
     <h1 class="text-4xl font-bold text-white">Guidelines</h1>
