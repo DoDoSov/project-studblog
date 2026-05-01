@@ -3,7 +3,7 @@
   import AcceIcon from '../../assets/Navbar/accessibility.svg';
   import SearchIcon from '../../assets/Navbar/search.svg';
 
-  let { activeTab = $bindable("Home") } = $props();
+  let { activeTab = $bindable("Home"), isLoggedIn = false, userRole = null, onLogout = () => {} } = $props();
   const menuItems = ["Home", "Read", "Top Blogs", "Guidelines", "About"];
 
   let searchQuery = $state("");
@@ -11,8 +11,8 @@
   let isAcceOpen = $state(false);
   let isMobileMenuOpen = $state(false);
 
-  let nickname = "Nickname";
-  let role = "Admin";
+  let nickname = isLoggedIn ? "You" : "Guest";
+  let role = userRole ?? "Guest";
 
   // Accessibility States
   let highContrast = $state(false);

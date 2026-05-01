@@ -1,5 +1,6 @@
 <script>
   import PostCardSmall from '../lib/components/PostCardSmall.svelte';
+  let { post = null } = $props();
 
   const featured = {
     title: "Understanding REST APIs with Real Examples: A Student's Field Guide",
@@ -18,6 +19,26 @@
   ];
 </script>
 <div class="h-32"></div>
+{#if post}
+  <section class="p-8 mb-8 bg-slate-900/70 rounded-3xl border border-white/10">
+    <p class="text-xs font-semibold uppercase tracking-[0.3em] text-yellow-400">{post.category ?? 'ARTICLE'}</p>
+    <h1 class="mt-4 text-4xl font-bold text-white">{post.title}</h1>
+    <p class="mt-4 text-gray-300 max-w-3xl">{post.description ?? 'No description available.'}</p>
+    <div class="mt-6 flex flex-wrap gap-3 text-xs uppercase tracking-[0.2em] text-gray-400">
+      {#if post.tags}
+        {#each post.tags as tag}
+          <span class="px-3 py-1 rounded-full bg-slate-800/70 border border-white/5">{tag}</span>
+        {/each}
+      {/if}
+      <span>{post.likes ?? 0} likes</span>
+      <span>{post.readTime ?? '—'} read</span>
+    </div>
+  </section>
+{:else}
+  <section class="p-8 mb-8 bg-slate-900/70 rounded-3xl border border-white/10 text-gray-300">
+    <p class="text-lg">No post selected. Please choose an article from the Home page.</p>
+  </section>
+{/if}
 <div class="bg-[#283047] rounded-2xl py-4space-y-10 animate-in fade-in duration-500">
   
   <section class="p-8">
