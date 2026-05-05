@@ -4,98 +4,147 @@
   import PostCardSmall from '../lib/components/PostCardSmall.svelte';
   import Promo from '../lib/components/Promo.svelte';
   import { posts as postsApi } from '../lib/api.js';
+  import { authStore } from '../lib/store.js';
+  import { getSavedSet, toggleSaved, shuffle } from '../lib/utils.js';
 
-  let { onPostClick } = $props();
+  export let onPostClick = () => {};
+  export let searchQuery = '';
 
-  let selectedCategory = $state('All');
-  let allPosts   = $state([]);
-  let loading    = $state(true);
-  let fetchError = $state('');
+  let selectedCategory = 'All';
+  let allPosts = [];
+  let loading = true;
+  let fetchError = '';
+  let likedSet = new Set();
+  let laterSet = new Set();
 
   async function loadPosts() {
-    loading    = true;
+    loading = true; 
     fetchError = '';
-    try {
-      allPosts = await postsApi.list(selectedCategory);
-    } catch (err) {
-      fetchError = err.message ?? 'Failed to load posts';
-    } finally {
-      loading = false;
+    try { 
+      allPosts = await postsApi.list(selectedCategory, 100); 
+    } catch (err) { 
+      fetchError = err.message ?? 'Failed to load posts'; 
+    } finally { 
+      loading = false; 
     }
   }
 
-  $effect(() => {
+  $: if (selectedCategory || searchQuery === '') {
     loadPosts();
-  });
+  }
 
-  // Split posts into display sections by index since there's no `type` field
-  let trendingPosts = $derived(allPosts.slice(0, 3));
-  let latestPosts   = $derived(allPosts.slice(3, 6));
-  let morePosts     = $derived(allPosts.slice(6));
+  $: {
+    const uid = $authStore.user?.id || 'guest';
+    likedSet = getSavedSet('liked_posts', uid);
+    laterSet = getSavedSet('read_later_posts', uid);
+  }
 
-  function handleCategoryChange(category) {
+  $: searchedPosts = searchQuery 
+    ? allPosts.filter(p => p.title?.toLowerCase().includes(searchQuery.toLowerCase())) 
+    : allPosts;
+
+  // UPDATED: Popularity sorting by Likes + Views
+  $: popularPosts = [...searchedPosts]
+    .sort((a, b) => {
+      const scoreA = (a.likes || 0) + (a.views || 0) * 0.1;
+      const scoreB = (b.likes || 0) + (b.views || 0) * 0.1;
+      return scoreB - scoreA;
+    })
+    .slice(0, 3);
+
+  $: latestPosts = [...searchedPosts]
+    .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+    .slice(0, 4);
+
+  $: recommendedPosts = shuffle(
+    searchedPosts.filter(p => !popularPosts.find(pop => pop.id === p.id))
+  ).slice(0, 3);
+
+  function changeCategory(category) {
     selectedCategory = category;
+  }
+
+  function save(post) {
+    if (!$authStore.isLoggedIn) return alert('Please log in first.');
+    toggleSaved('read_later_posts', post.id, $authStore.user.id);
+    laterSet = getSavedSet('read_later_posts', $authStore.user.id);
+  }
+
+  // UPDATED: Like function with Backend Sync
+  async function like(post) {
+    if (!$authStore.isLoggedIn) return alert('Please log in first.');
+    
+    // Toggle local UI
+    toggleSaved('liked_posts', post.id, $authStore.user.id);
+    likedSet = getSavedSet('liked_posts', $authStore.user.id);
+
+    try {
+      // Persist to DB via partial update
+      await postsApi.update(post.id, { increment_like: true });
+      loadPosts(); // Refresh counts
+    } catch (err) {
+      console.error("Like sync failed", err);
+    }
   }
 </script>
 
 <div class="h-32"></div>
 
-<div class="bg-[#1b2236] rounded-2xl max-w-7xl mx-auto px-4 md:px-6 flex flex-col gap-12 pb-20 text-white font-sans">
-  <div class="h-4"></div>
-  <Category onSelect={handleCategoryChange} />
+<section class="max-w-7xl mx-auto px-6 flex flex-col gap-12 pb-20">
+  <div class="glass-panel p-4 rounded-3xl sticky top-24 z-20">
+    <Category selected={selectedCategory} onSelect={changeCategory} />
+  </div>
 
   {#if loading}
-    <div class="flex justify-center py-20">
-      <div class="size-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-    </div>
+    <div class="py-20 text-center text-blue-400 animate-pulse">Loading posts from backend…</div>
   {:else if fetchError}
-    <div class="text-center py-16 text-red-400">{fetchError}</div>
+    <div class="glass-panel p-10 text-center text-red-400">
+      {fetchError} <br/>
+      <button class="mt-4 bg-white/10 px-6 py-2 rounded-full" on:click={loadPosts}>Retry</button>
+    </div>
+  {:else if searchedPosts.length === 0}
+    <div class="py-20 text-center text-white/30 italic">No article names match “{searchQuery}”.</div>
   {:else}
-
-    <section class="bg-[#1A1F2E] p-8 rounded-[2.5rem] border border-white/5 shadow-2xl">
+    <!-- Popular Section -->
+    <section>
       <div class="flex items-center gap-4 mb-8">
-        <h2 class="text-sm font-black text-blue-400 uppercase tracking-widest">Trending</h2>
-        <div class="h-[1px] flex-grow bg-white/5"></div>
-        <span class="text-[10px] font-bold text-gray-500 uppercase">{selectedCategory}</span>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {#each trendingPosts as post}
-          <PostCard {...post} onRead={() => onPostClick?.(post)} />
-        {:else}
-          <p class="col-span-full text-center py-10 text-gray-500 italic">No trending posts yet.</p>
-        {/each}
-      </div>
-    </section>
-
-    <section class="bg-[#1A1F2E] p-8 rounded-[2.5rem] border border-white/5 shadow-2xl">
-      <div class="flex items-center gap-4 mb-8">
-        <h2 class="text-sm font-black text-purple-400 uppercase tracking-widest">Latest</h2>
-        <div class="h-[1px] flex-grow bg-white/5"></div>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {#each latestPosts as post}
-          <PostCard {...post} onRead={() => onPostClick?.(post)} />
-        {:else}
-          <p class="col-span-full text-center py-10 text-gray-500 italic">No new posts yet.</p>
-        {/each}
-      </div>
-    </section>
-
-    {#if morePosts.length > 0}
-    <section class="bg-[#1A1F2E] p-8 rounded-[2.5rem] border border-white/5 shadow-2xl">
-      <div class="flex items-center gap-4 mb-8">
-        <h2 class="text-sm font-black text-green-400 uppercase tracking-widest">Discovery</h2>
-        <div class="h-[1px] flex-grow bg-white/5"></div>
+        <h2 class="text-2xl font-bold text-white">Popular</h2>
+        <div class="h-px flex-grow bg-white/10"></div>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {#each morePosts as post}
-          <PostCardSmall {...post} />
+        {#each popularPosts as post}
+          <PostCard 
+            {post} 
+            onRead={onPostClick} 
+            onSave={save} 
+            onLike={like} 
+            saved={laterSet.has(String(post.id))} 
+            liked={likedSet.has(String(post.id))} 
+          />
         {/each}
       </div>
     </section>
-    {/if}
 
+    <!-- Latest Section -->
+    <section>
+      <div class="flex items-center gap-4 mb-8">
+        <h2 class="text-2xl font-bold text-white">Latest Posts</h2>
+        <div class="h-px flex-grow bg-white/10"></div>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {#each latestPosts as post}
+          <PostCardSmall {post} onRead={onPostClick} />
+        {/each}
+      </div>
+    </section>
   {/if}
-
   <Promo />
-</div>
+</section>
+
+<style>
+  .glass-panel {
+    background: rgba(15, 18, 25, 0.7);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+</style>

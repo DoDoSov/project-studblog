@@ -1,52 +1,93 @@
 <script>
-  // Sample data for saved posts
-  let savedPosts = $state([
-    { id: 101, title: "How I Fixed My Sleep During Exam Season", author: "Elena L.", time: "7 min read", icon: "🌙" },
-    { id: 102, title: "Student Investing 101: €200 → €1,400", author: "Lukas P.", time: "11 min read", icon: "📈" }
-  ]);
+  import { posts as postsApi } from '../../lib/api.js';
+  import { authStore } from '../../lib/store.js';
+  import PostCard from '../../lib/components/PostCard.svelte';
+  import { getSavedSet, toggleSaved } from '../../lib/utils.js';
 
-  function removeSaved(id) {
-    savedPosts = savedPosts.filter(p => p.id !== id);
+  // Svelte 4 Props
+  export let onPostClick = () => {};
+
+  // Standard Svelte 4 variables (Replaces $state)
+  let items = [];
+  let loading = false;
+  let savedSet = new Set();
+
+  // Reactive statement to load data when login state changes (Replaces $effect)
+  $: if ($authStore.isLoggedIn) {
+    load();
+  } else {
+    items = [];
+    loading = false;
+  }
+
+  async function load() {
+    if (!$authStore.isLoggedIn) return;
+    
+    loading = true;
+    try {
+      // Get the set of IDs from localStorage utility
+      savedSet = getSavedSet('read_later_posts', $authStore.user.id);
+      
+      // Fetch posts from Flask backend
+      const all = await postsApi.list('All', 100);
+      
+      // Filter for only those in our 'Read Later' set[cite: 1]
+      items = all.filter(p => savedSet.has(String(p.id)));
+    } catch (err) {
+      console.error("Failed to load saved posts:", err);
+    } finally {
+      loading = false;
+    }
+  }
+
+  function remove(post) {
+    if (!$authStore.isLoggedIn) return;
+    
+    // Toggle status and refresh local list[cite: 1]
+    toggleSaved('read_later_posts', post.id, $authStore.user.id);
+    load(); 
   }
 </script>
 
 <div class="h-32"></div>
-<section class="rounded-2xl bg-[#283047] max-w-5xl mx-auto px-6 mb-20 animate-in fade-in slide-in-from-bottom-6 duration-700">
-<div class="h-4"></div>
-  <div class="mb-10 flex items-center justify-between">
-    <div>
-      <p class="text-[10px] font-black text-blue-400 tracking-widest uppercase mb-2">Your Library</p>
-      <h1 class="text-4xl font-bold text-white">Saved for Later</h1>
-    </div>
-    <div class="bg-blue-500/10 border border-blue-500/20 px-4 py-2 rounded-xl">
-      <span class="text-blue-400 font-bold">{savedPosts.length} Articles</span>
-    </div>
-  </div>
 
-  <div class="grid gap-4">
-    {#each savedPosts as post}
-      <div class="bg-[#1A1F2E] p-6 rounded-[2rem] border border-white/5 flex items-center justify-between hover:border-white/20 transition-all group">
-        <div class="flex items-center gap-5">
-          <div class="size-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-            {post.icon}
-          </div>
-          <div>
-            <h3 class="text-white font-bold mb-1">{post.title}</h3>
-            <p class="text-[10px] text-gray-500 uppercase font-medium">{post.author} • {post.time}</p>
-          </div>
-        </div>
-        <button 
-          onclick={() => removeSaved(post.id)}
-          class="text-gray-500 hover:text-red-400 text-xs font-bold uppercase tracking-widest transition-colors p-2"
-        >
-          Remove
-        </button>
-      </div>
-    {:else}
-      <div class="bg-[#1A1F2E] p-20 rounded-[3rem] border border-white/5 text-center">
-        <p class="text-gray-500 font-bold italic">Your reading list is empty.</p>
-      </div>
-    {/each}
-  </div>
-  <div class="h-4"></div>
+<section class="max-w-7xl mx-auto px-6 pb-20">
+  <header class="bg-white/5 p-10 rounded-[3rem] border border-white/10 mb-12">
+    <p class="text-[10px] font-black text-emerald-400 tracking-[0.3em] uppercase mb-4">Personal library</p>
+    <h1 class="text-5xl font-black text-white">Read Later</h1>
+    <p class="text-white/40 mt-4">A curated list of articles you've saved to catch up on later.</p>
+  </header>
+
+  {#if !$authStore.isLoggedIn}
+    <div class="glass-panel p-20 text-center rounded-[3rem]">
+      <h2 class="text-2xl font-bold text-white/40 italic">Please log in to see saved posts.</h2>
+    </div>
+  {:else if loading}
+    <div class="py-20 text-center text-emerald-400 animate-pulse font-medium">Retrieving your reading list...</div>
+  {:else if items.length === 0}
+    <div class="glass-panel p-20 text-center rounded-[3rem]">
+      <h2 class="text-2xl font-bold text-white/20 italic">No saved posts yet.</h2>
+      <p class="text-white/10 mt-2">Bookmark interesting articles to see them appear here.</p>
+    </div>
+  {:else}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {#each items as post}
+        <PostCard 
+          {post} 
+          onRead={onPostClick} 
+          onSave={remove} 
+          saved={true}
+        />
+      {/each}
+    </div>
+  {/if}
 </section>
+
+<style>
+  /* Tailwind 4.0 Glass Effect consistency[cite: 1] */
+  .glass-panel {
+    background-color: rgba(15, 18, 25, 0.7);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+</style>

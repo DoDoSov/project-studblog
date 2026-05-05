@@ -1,53 +1,92 @@
 <script>
-  // Ensure onRead is a prop so the button knows where to go
-  let { title, description, image, tags, onRead } = $props();
+  import { imageFor, formatDate, readTime } from '../utils.js';
+
+  /**
+   * Svelte 4 Props
+   */
+  export let post = {};
+  export let onRead = () => {};
+  export let onSave = null;
+  export let onLike = null;
+  export let saved = false;
+  export let liked = false;
 </script>
 
-<div class="group relative aspect-[4/3] w-full overflow-hidden rounded-[2.5rem] border border-white/10 bg-[#1A1F2E] shadow-xl transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/20">
-  
-  <img 
-    src={image} 
-    alt={title} 
-    class="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110 group-hover:brightness-[0.3]" 
-  />
-
-  <div class="absolute inset-0 flex flex-col justify-end p-8 bg-gradient-to-t from-black/90 via-black/20 to-transparent transition-opacity duration-300 group-hover:opacity-0">
-    <h3 class="text-xl font-bold text-white leading-tight">{title}</h3>
+<article class="glass-card group h-full flex flex-col overflow-hidden">
+  <!-- Image Container -->
+  <div class="relative h-48 overflow-hidden">
+    <img 
+      src={imageFor(post)} 
+      alt={post.title} 
+      class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+    />
+    <div class="absolute inset-0 bg-gradient-to-t from-[#1A1F2E] to-transparent opacity-60"></div>
+    <span class="absolute top-4 left-4 bg-blue-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">
+      {post.category}
+    </span>
   </div>
 
-  <div class="absolute inset-0 flex flex-col justify-between p-7 opacity-0 translate-y-2 transition-all duration-500 group-hover:opacity-100 group-hover:translate-y-0">
-    
-    <div class="space-y-3">
-      <h3 class="text-xl font-bold text-white leading-tight">{title}</h3>
-      <p class="text-sm text-gray-300 line-clamp-4 leading-relaxed">
-        {description}
-      </p>
-      <div class="flex flex-wrap gap-2">
-        {#each tags as tag}
-          <span class="text-[10px] text-gray-500 font-medium uppercase tracking-wider">#{tag.replace('#', '')}</span>
-        {/each}
-      </div>
+  <div class="p-6 flex flex-col flex-grow">
+    <!-- Meta Info -->
+    <div class="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-3">
+      {formatDate(post.created_at)} • {readTime(post.content)}
     </div>
 
-    <div class="flex items-center justify-between pb-1">
-      <div class="flex gap-4 items-center">
-        <button class="text-white/40 hover:text-white transition-colors cursor-pointer">
-          <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
-        </button>
-        <button class="text-white/40 hover:text-white transition-colors cursor-pointer">
-          <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
-        </button>
-        <button class="text-white/40 hover:text-red-400 transition-colors cursor-pointer">
-          <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-        </button>
-      </div>
+    <h3 class="text-xl font-bold text-white mb-3 group-hover:text-blue-400 transition-colors line-clamp-2">
+      {post.title}
+    </h3>
 
+    <p class="text-sm text-white/50 leading-relaxed mb-6 line-clamp-3">
+      {post.description || 'Open this student article to read the full post and explore the research.'}
+    </p>
+
+    <!-- Card Actions -->
+    <div class="mt-auto pt-6 border-t border-white/5 flex items-center justify-between">
       <button 
-        onclick={(e) => { e.stopPropagation(); onRead(); }}
-        class="bg-white text-black px-7 py-2.5 rounded-2xl text-sm font-bold hover:bg-gray-200 transition-all active:scale-95 cursor-pointer shadow-lg"
+        class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-xl text-xs font-bold transition-all active:scale-95"
+        on:click={() => onRead(post)}
       >
         Read
       </button>
+
+      <div class="flex gap-2">
+        {#if onSave}
+          <button 
+            class="size-9 flex items-center justify-center rounded-xl border border-white/10 transition-all {saved ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400' : 'bg-white/5 text-white/40 hover:text-white'}" 
+            on:click={() => onSave(post)} 
+            title="Read later"
+          >
+            🔖
+          </button>
+        {/if}
+        
+        {#if onLike}
+          <button 
+            class="size-9 flex items-center justify-center rounded-xl border border-white/10 transition-all {liked ? 'bg-red-500/20 border-red-500/50 text-red-400' : 'bg-white/5 text-white/40 hover:text-white'}" 
+            on:click={() => onLike(post)} 
+            title="Like"
+          >
+            ♥
+          </button>
+        {/if}
+      </div>
     </div>
   </div>
-</div>
+</article>
+
+<style>
+  /* Tailwind 4.0 Glass Panel utility */
+  .glass-card {
+    background-color: rgba(15, 18, 25, 0.7);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 2.5rem;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .glass-card:hover {
+    border-color: rgba(59, 130, 246, 0.3);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  }
+</style>

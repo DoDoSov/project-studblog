@@ -1,5 +1,10 @@
 <script>
-  let { type = $bindable(null) } = $props();
+  /**
+   * Svelte 4 Prop Migration
+   * 'export let' allows the parent to pass this value.
+   * To achieve the $bindable behavior, the parent must use 'bind:type={variable}'.
+   */
+  export let type = null;
 
   const content = {
     privacy: {
@@ -18,17 +23,20 @@
 </script>
 
 {#if type}
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div 
-    class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300"
-    onclick={close}
+    class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-6"
+    on:click={close}
   >
+    <!-- stopPropagation ensures clicking the modal body doesn't trigger the outer 'close' -->
     <div 
-      class="bg-[#1A1F2E] border border-white/10 w-full max-w-2xl rounded-[2.5rem] p-10 shadow-2xl relative animate-in zoom-in-95 duration-300"
-      onclick={(e) => e.stopPropagation()} 
+      class="bg-[#1A1F2E] border border-white/10 w-full max-w-2xl rounded-[2.5rem] p-10 shadow-2xl relative"
+      on:click|stopPropagation
     >
       <button 
-        onclick={close}
-        class="absolute top-6 right-8 text-gray-500 hover:text-white text-2xl"
+        on:click={close}
+        class="absolute top-6 right-8 text-gray-500 hover:text-white text-2xl transition-colors"
       >
         &times;
       </button>
@@ -43,8 +51,8 @@
       </div>
 
       <button 
-        onclick={close}
-        class="mt-8 w-full py-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl text-white font-bold transition-all"
+        on:click={close}
+        class="mt-8 w-full py-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl text-white font-bold transition-all active:scale-95"
       >
         I Understand
       </button>
@@ -53,6 +61,7 @@
 {/if}
 
 <style>
+  /* Svelte 4 Custom Scrollbar Styling */
   .custom-scrollbar::-webkit-scrollbar {
     width: 4px;
   }
@@ -60,4 +69,7 @@
     background: rgba(255,255,255,0.1);
     border-radius: 10px;
   }
+
+  /* Note: Svelte 5 'animate-in' classes replaced with standard CSS or 
+     Tailwind transitions for compatibility if your plugin isn't active. */
 </style>

@@ -1,8 +1,5 @@
 /**
  * Thin API client for the Flask backend.
- * All requests go to /api/* which is:
- *   - proxied to Flask by Vite during `npm run dev`
- *   - routed to Flask by Nginx in production (see nginx.conf /api/ block)
  */
 
 const BASE = '/api';
@@ -13,47 +10,71 @@ function authHeaders() {
 }
 
 async function request(method, path, body) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), 8000);
+
   const opts = {
     method,
+    signal: controller.signal,
     headers: {
       'Content-Type': 'application/json',
       ...authHeaders()
     }
   };
+  
   if (body !== undefined) opts.body = JSON.stringify(body);
 
-  const res = await fetch(`${BASE}${path}`, opts);
-  const data = await res.json().catch(() => ({}));
+  try {
+    const res = await fetch(`${BASE}${path}`, opts);
+    clearTimeout(id);
 
-  if (!res.ok) {
-    throw Object.assign(new Error(data.msg || 'Request failed'), { status: res.status, data });
+    if (res.status === 204) return null;
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      if (res.status === 401) {
+        localStorage.removeItem('access_token');
+        window.location.href = '/login'; 
+      }
+      
+      const error = new Error(data.msg || data.error || `Error ${res.status}`);
+      throw Object.assign(error, { status: res.status, data });
+    }
+    return data;
+  } catch (err) {
+    if (err.name === 'AbortError') throw new Error('Backend timeout.');
+    throw err;
   }
-  return data;
 }
 
-// ── Auth ──────────────────────────────────────────────────────────────────────
 export const auth = {
   register: (payload) => request('POST', '/register', payload),
   login:    (payload) => request('POST', '/login',    payload),
 };
 
-// ── Current user ──────────────────────────────────────────────────────────────
 export const me = {
-  get:    ()        => request('GET',  '/me'),
+  get:    ()    => request('GET',  '/me'),
   update: (payload) => request('PUT',  '/me', payload),
 };
 
-// ── Posts ─────────────────────────────────────────────────────────────────────
 export const posts = {
-  list:   (category) => request('GET',    `/posts${category && category !== 'All' ? `?category=${encodeURIComponent(category)}` : ''}`),
   get:    (id)       => request('GET',    `/posts/${id}`),
-  create: (payload)  => request('POST',   '/posts',    payload),
+  create: (payload)  => request('POST',   '/posts',     payload),
+  // FIXED: Ensure pathing matches Flask route exactly
   update: (id, payload) => request('PUT', `/posts/${id}`, payload),
   remove: (id)       => request('DELETE', `/posts/${id}`),
   mine:   ()         => request('GET',    '/my-posts'),
+  
+  list: (category, limit = 50) => {
+    let query = `?limit=${limit}`;
+    if (category && category !== 'All') {
+      query += `&category=${encodeURIComponent(category)}`;
+    }
+    return request('GET', `/posts${query}`);
+  },
 };
 
-// ── Admin ─────────────────────────────────────────────────────────────────────
 export const admin = {
   users:   () => request('GET', '/admin/users'),
   pending: () => request('GET', '/admin/posts/pending'),

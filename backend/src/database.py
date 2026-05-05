@@ -1,5 +1,4 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.dialects.postgresql import UUID # CockroachDB loves UUIDs
 from datetime import datetime
 
 db = SQLAlchemy()
@@ -7,25 +6,55 @@ db = SQLAlchemy()
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.BigInteger, primary_key=True)
-    first_name = db.Column(db.String(100))
-    last_name = db.Column(db.String(100))
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(20), default='Reader')
-    
-    # UNCOMMENT THIS LINE:
-    posts = db.relationship('Post', backref='author', lazy=True)
+    first_name = db.Column(db.String(50))
+    last_name = db.Column(db.String(50))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "id": str(self.id),
+            "email": self.email,
+            "first_name": self.first_name,
+            "last_name": self.last_name,
+            "role": self.role
+        }
 
 class Post(db.Model):
     __tablename__ = 'posts'
     id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     title = db.Column(db.String(200), nullable=False)
     category = db.Column(db.String(50), nullable=False)
+    banner_url = db.Column(db.String(500))
     description = db.Column(db.Text)
     content = db.Column(db.Text, nullable=False)
     user_id = db.Column(db.BigInteger, db.ForeignKey('users.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(20), default='pending')
+    # NEW: Popularity Tracking
+    likes = db.Column(db.Integer, default=0)
+    views = db.Column(db.Integer, default=0)
 
+    author = db.relationship('User', backref=db.backref('posts', lazy=True))
+
+    def to_dict(self):
+        return {
+            "id": str(self.id),
+            "title": self.title,
+            "category": self.category,
+            "banner_url": self.banner_url,
+            "description": self.description,
+            "content": self.content,
+            "user_id": str(self.user_id),
+            "author_name": f"{self.author.first_name} {self.author.last_name}" if self.author else "Unknown",
+            "created_at": self.created_at.isoformat(),
+            "likes": self.likes,
+            "views": self.views
+        }
+
+# Logic tables for tracking interactions
 class Comment(db.Model):
     __tablename__ = 'comments'
     id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)

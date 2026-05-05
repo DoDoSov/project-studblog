@@ -1,33 +1,63 @@
-/**
- * Svelte 5 reactive auth store.
- * Persists the JWT and user object in localStorage so the session
- * survives page reloads.
- */
+import { writable, derived } from 'svelte/store';
 
 function createAuthStore() {
-  // Hydrate from localStorage on first load
-  let _token = $state(localStorage.getItem('access_token') ?? null);
-  let _user  = $state(JSON.parse(localStorage.getItem('user') ?? 'null'));
+  // 1. Initialize data from localStorage (Hydration)
+  // We use 'access_token' to match your Flask backend's new key name
+  const initialToken = localStorage.getItem('access_token') || null;
+  const initialUser = JSON.parse(localStorage.getItem('user') || 'null');
+
+  // 2. Create the internal writable store
+  // We include isLoggedIn directly in the object so $authStore.isLoggedIn works
+  const { subscribe, set, update } = writable({
+    token: initialToken,
+    user: initialUser,
+    isLoggedIn: !!initialToken
+  });
 
   return {
-    get token() { return _token; },
-    get user()  { return _user;  },
-    get isLoggedIn() { return !!_token; },
+    subscribe, // Makes the store "subscribable" in components via $authStore
 
+    /**
+     * Updates the store and persists to localStorage
+     * @param {string} token - The JWT access token
+     * @param {object} user - The user object from Flask
+     */
     setSession(token, user) {
-      _token = token;
-      _user  = user;
       localStorage.setItem('access_token', token);
       localStorage.setItem('user', JSON.stringify(user));
+      set({ 
+        token, 
+        user, 
+        isLoggedIn: true 
+      });
     },
 
+    /**
+     * Clears store and localStorage on logout
+     */
     clearSession() {
-      _token = null;
-      _user  = null;
       localStorage.removeItem('access_token');
       localStorage.removeItem('user');
+      set({ 
+        token: null, 
+        user: null, 
+        isLoggedIn: false 
+      });
     }
   };
 }
 
+// The main store instance
 export const authStore = createAuthStore();
+
+/**
+ * Derived store for login status (Optional)
+ * Usage: import { isLoggedIn } from './store.js'; then use $isLoggedIn
+ */
+export const isLoggedIn = derived(authStore, ($auth) => $auth.isLoggedIn);
+
+/**
+ * Derived store for user data (Optional)
+ * Usage: import { user } from './store.js'; then use $user
+ */
+export const user = derived(authStore, ($auth) => $auth.user);

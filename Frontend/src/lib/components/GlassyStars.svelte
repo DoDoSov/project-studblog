@@ -1,60 +1,115 @@
 <script>
-  // Grid settings
-  const rows = 14;
-  const cols = 8;
-  const spawnChance = 0.3; // 30% chance a star exists in a grid cell
-
-  // Generate the grid data once
+  // Stars generation logic (stays the same)
+  const rows = 12;
+  const cols = 7;
+  const spawnChance = 0.25;
   const grid = [];
+  
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       if (Math.random() < spawnChance) {
         grid.push({
-          top: (r * (100 / rows)) + (Math.random() * 2), // Position + slight jitter
-          left: (c * (100 / cols)) + (Math.random() * 2),
-          delay: Math.random() * 5, // Random start for the shine
-          duration: 3 + Math.random() * 4 // Random speed of the shine
+          top: (r * (100 / rows)) + (Math.random() * 4),
+          left: (c * (100 / cols)) + (Math.random() * 4),
+          delay: Math.random() * -10,
+          duration: 6 + Math.random() * 6,
+          size: 15 + Math.random() * 30,
+          rotation: Math.random() * 360
         });
       }
     }
   }
 </script>
 
-<div class="fixed inset-0 w-full h-full -z-10 bg-[#0B0E14] overflow-hidden pointer-events-none">
+<svg style="position: absolute; width: 0; height: 0; pointer-events: none;" aria-hidden="true">
+  <defs>
+    <radialGradient id="geminiGradient">
+      <stop offset="0%" stop-color="#FFF" />
+      <stop offset="40%" stop-color="#A78BFA" /> 
+      <stop offset="100%" stop-color="#3B82F6" />
+    </radialGradient>
+    <filter id="geminiGlow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+</svg>
+
+<div class="stars-container">
   {#each grid as star}
     <div 
-      class="absolute star-crystal"
+      class="star-wrapper"
       style="
         top: {star.top}%; 
         left: {star.left}%; 
         --delay: {star.delay}s; 
         --duration: {star.duration}s;
+        --size: {star.size}px;
+        --init-rot: {star.rotation}deg;
       "
     >
-      <svg viewBox="0 0 100 100" class="size-12 text-blue-400/30">
-        <path d="M50,15 C55,40 60,45 85,50 C60,55 55,60 50,85 C45,60 40,55 15,50 C40,45 45,40 50,15 Z" fill="currentColor" />
+      <svg viewBox="0 0 100 100" class="star-svg">
+        <path 
+          d="M50 0C50 27.6 72.4 50 100 50C72.4 50 50 72.4 50 100C50 72.4 27.6 50 0 50C27.6 50 50 27.6 50 0Z" 
+          fill="url(#geminiGradient)"
+          filter="url(#geminiGlow)"
+        />
+        <circle cx="50" cy="50" r="10" fill="white" filter="url(#geminiGlow)" />
       </svg>
     </div>
   {/each}
 </div>
 
 <style>
-  .star-crystal {
-    animation: crystal-shine var(--duration) ease-in-out infinite;
-    animation-delay: var(--delay);
-    filter: blur(0.5px);
+  .stars-container {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -50;
+    overflow: hidden;
+    pointer-events: none;
+    perspective: 1000px;
+    transition: background 1s ease-in-out; /* Smooth color transition */
+    
+    /* DEFAULT DARK THEME GRADIENT */
+    background: radial-gradient(circle at 50% 50%, #111827 0%, #0B0E14 100%);
   }
 
-  @keyframes crystal-shine {
-    0%, 100% {
-      opacity: 0.1;
-      transform: scale(0.8) rotate(0deg);
-      filter: brightness(1) blur(1px);
-    }
-    50% {
-      opacity: 0.6;
-      transform: scale(1.1) rotate(5deg);
-      filter: brightness(2) blur(0px); /* The "Crystal" flash */
-    }
+  /* Listen for theme changes on the :root but apply it here */
+  :global(:root[data-theme='warm']) .stars-container {
+    background: radial-gradient(circle at 50% 50%, #452727 0%, #1a0f0f 100%);
+  }
+
+  :global(:root[data-theme='contrast']) .stars-container {
+    background: #000000;
+  }
+
+  .star-wrapper {
+    position: absolute;
+    width: var(--size);
+    height: var(--size);
+    will-change: transform;
+    animation: float-3d var(--duration) ease-in-out infinite alternate;
+    animation-delay: var(--delay);
+    filter: drop-shadow(0 0 10px rgba(167, 139, 250, 0.4));
+  }
+
+  .star-svg {
+    width: 100%;
+    height: 100%;
+    will-change: opacity, transform;
+    animation: twinkle var(--duration) ease-in-out infinite;
+    animation-delay: var(--delay);
+  }
+
+  @keyframes float-3d {
+    0% { transform: translateZ(0) translateY(0) rotate(var(--init-rot)); }
+    100% { transform: translateZ(60px) translateY(-40px) rotate(calc(var(--init-rot) + 20deg)); }
+  }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.2; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.1); }
   }
 </style>

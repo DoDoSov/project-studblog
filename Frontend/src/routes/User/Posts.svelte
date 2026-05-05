@@ -1,161 +1,129 @@
 <script>
+  import { onMount } from 'svelte';
   import { posts as postsApi } from '../../lib/api.js';
   import { authStore } from '../../lib/store.js';
+  import { CATEGORIES, formatDate } from '../../lib/utils.js';
 
-  let myPosts    = $state([]);
-  let loading    = $state(true);
-  let fetchError = $state('');
+  export let onPostClick = () => {};
 
-  // Create-post form state
-  let showForm    = $state(false);
-  let formTitle   = $state('');
-  let formCat     = $state('Technology');
-  let formDesc    = $state('');
-  let formContent = $state('');
-  let saving      = $state(false);
-  let saveError   = $state('');
+  let myPosts = [];
+  let loading = true;
+  let fetchError = '';
+  let editingId = null;
+  let saving = false;
+  let saveError = '';
 
-  const CATEGORIES = ['Technology', 'Science', 'Finance', 'Health', 'AI', 'General'];
+  let title = '', category = 'Technology', description = '', imageUrl = '', content = '';
+  let editorElement, quill;
 
-  async function loadMyPosts() {
-    loading    = true;
-    fetchError = '';
-    try {
-      myPosts = await postsApi.mine();
-    } catch (err) {
-      fetchError = err.message ?? 'Failed to load posts';
-    } finally {
-      loading = false;
-    }
-  }
-
-  $effect(() => {
-    if (authStore.isLoggedIn) loadMyPosts();
-    else loading = false;
+  onMount(async () => {
+    const Quill = (await import('quill')).default;
+    import('quill/dist/quill.snow.css');
+    quill = new Quill(editorElement, {
+      theme: 'snow',
+      modules: { toolbar: [[{ 'header': [1, 2, false] }], ['bold', 'italic'], ['link', 'image'], ['clean']] }
+    });
+    quill.on('text-change', () => { content = quill.root.innerHTML; });
   });
 
-  async function handleCreate() {
+  $: if ($authStore.isLoggedIn) load();
+
+  async function load() {
+    loading = true;
+    try { myPosts = await postsApi.mine(); } 
+    catch (e) { fetchError = e.message; } 
+    finally { loading = false; }
+  }
+
+  async function save() {
+    saving = true;
     saveError = '';
-    saving    = true;
+    const payload = { title, category, description, banner_url: imageUrl, content };
+
     try {
-      await postsApi.create({
-        title:       formTitle,
-        category:    formCat,
-        description: formDesc,
-        content:     formContent
-      });
-      formTitle = formDesc = formContent = '';
-      showForm  = false;
-      await loadMyPosts();
-    } catch (err) {
-      saveError = err.data?.msg ?? err.message ?? 'Failed to create post';
-    } finally {
-      saving = false;
-    }
+      if (editingId) { await postsApi.update(editingId, payload); } 
+      else { await postsApi.create(payload); }
+      reset();
+      await load();
+    } catch (e) { saveError = e.data?.msg || e.message; } 
+    finally { saving = false; }
   }
 
-  async function handleDelete(id) {
-    if (!confirm('Delete this post?')) return;
-    try {
+  function reset() {
+    editingId = null; title = ''; description = ''; imageUrl = ''; content = '';
+    if (quill) quill.root.innerHTML = '';
+    category = 'Technology';
+  }
+
+  async function edit(post) {
+    const full = await postsApi.get(post.id);
+    editingId = full.id;
+    title = full.title; category = full.category; description = full.description;
+    imageUrl = full.banner_url; content = full.content;
+    if (quill) quill.root.innerHTML = content;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function remove(id) {
+    if (confirm('Delete this post?')) {
       await postsApi.remove(id);
-      await loadMyPosts();
-    } catch (err) {
-      alert(err.data?.msg ?? 'Delete failed');
+      await load();
     }
-  }
-
-  function formatDate(iso) {
-    if (!iso) return '';
-    return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 </script>
 
 <div class="h-32"></div>
-
-<section class="max-w-7xl bg-[#283047] rounded-2xl mx-auto px-6 mb-20 animate-in fade-in slide-in-from-bottom-6 duration-700">
-  <div class="h-4"></div>
-
-  {#if !authStore.isLoggedIn}
-    <div class="py-20 text-center text-gray-400">Please log in to manage your posts.</div>
+<section class="max-w-7xl mx-auto px-6 pb-20">
+  {#if !$authStore.isLoggedIn}
+    <div class="glass-panel p-20 text-center rounded-[3rem]">Please log in.</div>
   {:else}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+      <form class="lg:col-span-2 glass-panel p-10 rounded-[2.5rem] space-y-6" on:submit|preventDefault={save}>
+        <h1 class="text-4xl font-black text-white">{editingId ? 'Update Post' : 'New Article'}</h1>
+        <div class="grid grid-cols-2 gap-6">
+          <input bind:value={title} placeholder="Title" required class="form-input" />
+          <select bind:value={category} class="form-input">
+            {#each CATEGORIES.filter(c => c !== 'All') as c}<option>{c}</option>{/each}
+          </select>
+        </div>
+        <input bind:value={imageUrl} placeholder="Image URL" class="form-input" />
+        <textarea bind:value={description} placeholder="Short summary..." class="form-input"></textarea>
+        <div class="editor-wrapper"><div bind:this={editorElement}></div></div>
+        <button class="bg-blue-600 w-full py-4 rounded-2xl font-bold text-white transition-all disabled:opacity-50" disabled={saving}>
+          {saving ? 'Saving...' : 'Submit for Review'}
+        </button>
+      </form>
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
-    <div class="lg:col-span-2 bg-[#1A1F2E] p-10 rounded-[2.5rem] border border-white/5 shadow-2xl flex flex-col justify-center relative overflow-hidden">
-      <div class="relative z-10">
-        <p class="text-[10px] font-black text-blue-400 tracking-[0.2em] uppercase mb-4">Creator Studio</p>
-        <h1 class="text-4xl font-bold text-white mb-4">Your Stories</h1>
-        <p class="text-gray-400 max-w-md">Manage your drafts, view analytics, and share your knowledge with the student community.</p>
-      </div>
-      <span class="absolute -right-4 -bottom-10 text-[180px] opacity-5 pointer-events-none">Write</span>
-    </div>
-
-    <button
-      onclick={() => showForm = !showForm}
-      class="bg-blue-600 hover:bg-blue-500 transition-all rounded-[2.5rem] flex flex-col items-center justify-center p-10 group cursor-pointer shadow-xl shadow-purple-900/20"
-    >
-      <div class="size-16 bg-white/20 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-        <span class="text-3xl text-white">{showForm ? '×' : '+'}</span>
-      </div>
-      <span class="text-xl font-bold text-white">{showForm ? 'Cancel' : 'Create New Post'}</span>
-    </button>
-  </div>
-
-  {#if showForm}
-  <div class="bg-[#1A1F2E] rounded-[2.5rem] border border-white/5 p-8 mb-8">
-    <h2 class="text-lg font-bold text-white mb-6">New Post</h2>
-    {#if saveError}
-      <div class="mb-4 px-4 py-3 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 text-sm">{saveError}</div>
-    {/if}
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-      <input bind:value={formTitle} placeholder="Title" class="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:ring-2 ring-blue-500/50" />
-      <select bind:value={formCat} class="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:ring-2 ring-blue-500/50">
-        {#each CATEGORIES as c}<option value={c}>{c}</option>{/each}
-      </select>
-    </div>
-    <input bind:value={formDesc} placeholder="Short description" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:ring-2 ring-blue-500/50 mb-4" />
-    <textarea bind:value={formContent} placeholder="Write your post content here…" rows="6" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:ring-2 ring-blue-500/50 mb-4 resize-none"></textarea>
-    <button onclick={handleCreate} disabled={saving || !formTitle || !formContent} class="px-8 py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl text-sm font-bold transition-all active:scale-95">
-      {saving ? 'Publishing…' : 'Publish Post'}
-    </button>
-  </div>
-  {/if}
-
-  <div class="bg-[#1A1F2E] rounded-[2.5rem] border border-white/5 overflow-hidden shadow-2xl">
-    <div class="p-8 border-b border-white/5 bg-white/5 flex justify-between items-center">
-      <h2 class="font-bold text-white">Active Manuscripts</h2>
-      <span class="px-3 py-1 bg-black/20 rounded-full text-[10px] font-bold text-gray-400 uppercase tracking-widest border border-white/5">
-        Total: {myPosts.length}
-      </span>
-    </div>
-
-    {#if loading}
-      <div class="p-12 flex justify-center">
-        <div class="size-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    {:else if fetchError}
-      <div class="p-12 text-center text-red-400">{fetchError}</div>
-    {:else if myPosts.length === 0}
-      <div class="p-12 text-center text-gray-500 italic">No posts yet. Create your first one!</div>
-    {:else}
-      <div class="divide-y divide-white/5">
-        {#each myPosts as post}
-          <div class="p-6 hover:bg-white/[0.02] transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div class="flex flex-col gap-1">
-              <span class="text-sm font-bold text-white">{post.title}</span>
-              <p class="text-[10px] text-gray-500 font-medium">{formatDate(post.created_at)} • {post.category}</p>
+      <div class="glass-panel p-10 rounded-[2.5rem] space-y-6">
+        <h2 class="text-xl font-bold text-white uppercase tracking-widest border-b border-white/10 pb-4">My Archive</h2>
+        <div class="space-y-4 max-h-[800px] overflow-y-auto custom-scrollbar">
+          {#each myPosts as post}
+            <div class="bg-white/5 p-5 rounded-2xl border border-white/5">
+              <div class="flex justify-between items-start mb-2">
+                <span class="text-[10px] font-bold uppercase px-2 py-1 rounded 
+                  {post.status === 'Approved' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}">
+                  {post.status || 'Pending'}
+                </span>
+                <small class="text-white/20">{formatDate(post.created_at)}</small>
+              </div>
+              <h3 class="text-white font-bold line-clamp-1 mb-4">{post.title}</h3>
+              <div class="flex gap-2">
+                <button class="flex-1 bg-white/5 py-2 rounded-lg text-xs font-bold" on:click={() => edit(post)}>Edit</button>
+                <button class="flex-1 bg-red-500/10 text-red-400 py-2 rounded-lg text-xs font-bold" on:click={() => remove(post.id)}>Delete</button>
+              </div>
             </div>
-            <div class="flex items-center gap-2">
-              <button
-                onclick={() => handleDelete(post.id)}
-                class="p-3 bg-red-500/10 hover:bg-red-500/20 rounded-xl transition-all border border-red-500/10 text-red-400 text-xs font-bold"
-              >Delete</button>
-            </div>
-          </div>
-        {/each}
+          {/each}
+        </div>
       </div>
-    {/if}
-  </div>
-
+    </div>
   {/if}
-  <div class="h-4"></div>
 </section>
+
+<style>
+  @reference "../../app.css";
+  .glass-panel { background: rgba(15, 18, 25, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
+  .form-input { @apply w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white focus:border-blue-500 outline-none; }
+  .editor-wrapper { @apply bg-white/5 border border-white/10 rounded-2xl min-h-[300px]; }
+  :global(.ql-editor) { color: white !important; }
+  :global(.ql-toolbar) { background: #1a1f2e !important; border: none !important; }
+</style>
