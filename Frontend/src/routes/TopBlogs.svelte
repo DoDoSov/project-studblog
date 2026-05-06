@@ -69,7 +69,7 @@
       Trending Content
     </p>
     <h1 class="text-5xl font-black text-white leading-tight mb-4">Popular by Category</h1>
-    <p class="text-white/40 max-w-xl">
+    <p class="text-white/40  self-center">
       Explore the community's favorite picks. Use the topics below to filter the highest-rated discussions.
     </p>
   </header>

@@ -1,12 +1,55 @@
 from flask import Blueprint, request, jsonify
 from .database import db, User, Post, Comment, Like, ReadLater
-import datetime
+import datetime, requests, re
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
 
 api = Blueprint('api', __name__)
 
-# ── Auth ──────────────────────────────────────────────────────────────────────
+# ── Helper for GitHub API (Now saves to DB to meet assignment reqs) ──────────
+
+def sync_github_data(post, repo_path=None):
+    """
+    Retrieves data from 3rd party server (GitHub) and saves to database.
+    Fulfills the 'API connected to a database' requirement.
+
+    Priority order for finding the repo path:
+    1. Explicit repo_path argument (sent directly from the form field)
+    2. [github: user/repo] tag embedded in post content (legacy fallback)
+    """
+    # 1. Use the explicitly provided field first
+    if not repo_path:
+        # 2. Fall back to scanning content for the embedded tag
+        match = re.search(r'\[github:\s*([\w.\-]+/[\w.\-]+)\]', post.content or '')
+        repo_path = match.group(1).strip() if match else None
+
+    if repo_path:
+        post.github_repo = repo_path
+        try:
+            # Step 1: Retrieve from 3rd party server (GitHub API)
+            response = requests.get(
+                f"https://api.github.com/repos/{repo_path}",
+                headers={"Accept": "application/vnd.github+json"},
+                timeout=5
+            )
+            if response.status_code == 200:
+                data = response.json()
+                # Step 2: Save retrieved data to your CockroachDB database
+                post.github_stars = data.get('stargazers_count', 0)
+                post.github_forks = data.get('forks_count', 0)
+                post.last_sync = datetime.datetime.utcnow()
+            else:
+                print(f"GitHub API returned {response.status_code} for {repo_path}")
+        except Exception as e:
+            print(f"GitHub Sync Error: {e}")
+    else:
+        # No repo provided — clear any previously stored GitHub data
+        post.github_repo = None
+        post.github_stars = 0
+        post.github_forks = 0
+        post.last_sync = None
+
+# ── Auth & Profile ────────────────────────────────────────────────────────────
 
 @api.route('/register', methods=['POST'])
 def register():
@@ -43,11 +86,42 @@ def login():
     except Exception as e:
         return jsonify({"error": "Server error"}), 500
 
+@api.route('/me', methods=['GET'])
+@jwt_required()
+def get_me():
+    user_id = int(get_jwt_identity())
+    user = User.query.get_or_404(user_id)
+    return jsonify(user.to_dict()), 200
+
+@api.route('/me', methods=['PUT'])
+@jwt_required()
+def update_me():
+    user_id = int(get_jwt_identity())
+    user = User.query.get_or_404(user_id)
+    data = request.get_json()
+
+    if 'first_name' in data:
+        user.first_name = data.get('first_name')
+    if 'last_name' in data:
+        user.last_name = data.get('last_name')
+
+    if 'new_password' in data and data.get('new_password').strip():
+        user.password_hash = generate_password_hash(data.get('new_password'), method='pbkdf2:sha256')
+
+    try:
+        db.session.commit()
+        return jsonify({
+            "msg": "Profile updated successfully",
+            "user": user.to_dict()
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": "Could not update profile"}), 500
+
 # ── Posts (Public & Author) ───────────────────────────────────────────────────
 
 @api.route('/posts', methods=['GET'])
 def get_posts():
-    """Returns only APPROVED posts for the main feed."""
     category = request.args.get('category')
     limit = request.args.get('limit', type=int) 
     
@@ -60,32 +134,21 @@ def get_posts():
     if limit: query = query.limit(limit)
         
     posts = query.all()
-    return jsonify([{
-        "id": p.id,
-        "title": p.title,
-        "category": p.category,
-        "banner_url": p.banner_url, 
-        "description": p.description,
-        "content": p.content,
-        "status": p.status,
-        "created_at": p.created_at.isoformat() if p.created_at else None,
-        "author": f"{p.author.first_name} {p.author.last_name}".strip() if p.author else "Anonymous"
-    } for p in posts]), 200
+    
+    # Returning data retrieved from the database
+    return jsonify([p.to_dict() for p in posts]), 200
 
-@api.route('/posts/<int:post_id>', methods=['GET'])
+@api.route('/posts/<post_id>', methods=['GET'])
 def get_post(post_id):
-    p = Post.query.get_or_404(post_id)
-    return jsonify({
-        "id": p.id,
-        "title": p.title,
-        "category": p.category,
-        "banner_url": p.banner_url, 
-        "description": p.description,
-        "content": p.content,
-        "status": p.status,
-        "created_at": p.created_at.isoformat() if p.created_at else None,
-        "author": f"{p.author.first_name} {p.author.last_name}".strip() if p.author else "Anonymous"
-    }), 200
+    try:
+        numeric_id = int(post_id)
+    except:
+        return jsonify({"error": "Invalid ID"}), 400
+        
+    p = Post.query.get_or_404(numeric_id)
+
+    # Returns data from DB (including github_stars/forks)
+    return jsonify(p.to_dict()), 200
 
 @api.route('/posts', methods=['POST'])
 @jwt_required()
@@ -102,46 +165,51 @@ def create_post():
         user_id=user_id,
         status='pending'
     )
+    
+    # Read the direct github_repo field sent from the form, then sync with GitHub API
+    repo_field = data.get('github_repo', '').strip() or None
+    sync_github_data(post, repo_path=repo_field)
+    
     db.session.add(post)
     db.session.commit()
-    return jsonify({"msg": "Post submitted for review", "id": post.id}), 201
+    return jsonify({"msg": "Post submitted for review", "id": str(post.id)}), 201
 
-# Change from <int:post_id> to <post_id> (defaults to string)
 @api.route('/posts/<post_id>', methods=['PUT'])
 @jwt_required()
 def update_post(post_id):
     user_id = int(get_jwt_identity())
     current_user = User.query.get(user_id)
     
-    # 1. Safely convert the large ID string to a Python integer
     try:
         numeric_id = int(post_id)
     except (ValueError, TypeError):
         return jsonify({"error": "Invalid Post ID format"}), 400
 
-    # 2. Query using the numeric ID
     post = Post.query.get_or_404(numeric_id)
     
-    # 3. Check permissions
     if post.user_id != user_id and current_user.role != 'Admin':
         return jsonify({"msg": "Forbidden"}), 403
 
     data = request.get_json()
     
-    # 4. Handle Status Update (Admin Only)
     if current_user.role == 'Admin' and 'status' in data:
-        # This will now correctly set 'Approved' from your Svelte frontend
         post.status = data.get('status')
     
-    # Handle standard edits
     post.title = data.get('title', post.title)
     post.content = data.get('content', post.content)
+    post.category = data.get('category', post.category)
+    post.description = data.get('description', post.description)
+    post.banner_url = data.get('banner_url', post.banner_url)
+    
+    # Re-sync GitHub data — prefer the explicit field, fall back to content scan
+    repo_field = data.get('github_repo', '').strip() or None
+    sync_github_data(post, repo_path=repo_field)
     
     db.session.commit()
     return jsonify({
         "msg": "Post updated successfully", 
         "status": post.status,
-        "id": str(post.id) # Return as string to avoid JS precision issues
+        "id": str(post.id) 
     }), 200
 
 @api.route('/my-posts', methods=['GET'])
@@ -149,13 +217,7 @@ def update_post(post_id):
 def my_posts():
     user_id = int(get_jwt_identity())
     posts = Post.query.filter_by(user_id=user_id).order_by(Post.created_at.desc()).all()
-    return jsonify([{
-        "id": p.id,
-        "title": p.title,
-        "category": p.category,
-        "status": p.status,
-        "created_at": p.created_at.isoformat() if p.created_at else None
-    } for p in posts]), 200
+    return jsonify([p.to_dict() for p in posts]), 200
 
 # ── Admin Routes ──────────────────────────────────────────────────────────────
 
@@ -171,20 +233,29 @@ def admin_pending_posts():
         return jsonify({"msg": "Admin access required"}), 403
     
     posts = Post.query.filter_by(status='pending').order_by(Post.created_at.desc()).all()
-    return jsonify([{
-        "id": p.id,
-        "title": p.title,
-        "category": p.category,
-        "content": p.description or p.content[:100],
-        "author_name": f"{p.author.first_name} {p.author.last_name}" if p.author else "Unknown"
-    } for p in posts]), 200
+    return jsonify([p.to_dict() for p in posts]), 200
 
-@api.route('/posts/<int:post_id>', methods=['DELETE'])
+@api.route('/admin/posts/all', methods=['GET'])
+@jwt_required()
+def get_all_posts_admin():
+    if not _is_admin():
+        return jsonify({"msg": "Admin access required"}), 403
+    
+    posts = Post.query.order_by(Post.created_at.desc()).all()
+    return jsonify([p.to_dict() for p in posts]), 200
+
+@api.route('/posts/<post_id>', methods=['DELETE'])
 @jwt_required()
 def delete_post(post_id):
     user_id = int(get_jwt_identity())
     user = User.query.get(user_id)
-    post = Post.query.get_or_404(post_id)
+    
+    try:
+        numeric_id = int(post_id)
+    except:
+        return jsonify({"error": "Invalid ID"}), 400
+
+    post = Post.query.get_or_404(numeric_id)
     
     if post.user_id != user_id and user.role not in ('Admin', 'Moderator'):
         return jsonify({"msg": "Forbidden"}), 403
@@ -193,23 +264,7 @@ def delete_post(post_id):
     db.session.commit()
     return jsonify({"msg": "Post deleted"}), 200
 
-# ── Error Handlers & Static APIs ─────────────────────────────────────────────
-
-@api.app_errorhandler(404)
-def handle_404(e):
-    return jsonify({
-        "error": "Not Found",
-        "message": "The requested resource could not be found on this server."
-    }), 404
-
-@api.route('/branding', methods=['GET'])
-def get_branding():
-    return jsonify({
-        "site_name": "Student Blog",
-        "slogan": "Share Knowledge, Empower Peers",
-        "logo_url": "/assets/logo.png",
-        "version": "1.0.0"
-    }), 200
+# ── Static & Branding ─────────────────────────────────────────────────────────
 
 @api.route('/about-static', methods=['GET'])
 def get_about_static():
@@ -222,4 +277,13 @@ def get_about_static():
             {"id": "STEP 03", "title": "Editor Reviews", "desc": "Ensuring quality guidelines.", "icon": "✅"},
             {"id": "STEP 04", "title": "Go Live & Share", "icon": "🌍", "desc": "Published on the platform."}
         ]
+    }), 200
+
+@api.route('/branding', methods=['GET'])
+def get_branding():
+    return jsonify({
+        "site_name": "Student Blog",
+        "slogan": "Share Knowledge, Empower Peers",
+        "logo_url": "/assets/logo.png",
+        "version": "1.0.0"
     }), 200

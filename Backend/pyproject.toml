@@ -12,6 +12,7 @@ dependencies = [
     "flask-sqlalchemy>=3.1.1",
     "numpy>=2.4.4",
     "psycopg2-binary>=2.9.12",
+    "requests>=2.33.1",
     "sqlalchemy>=2.0.49",
     "sqlalchemy-cockroachdb>=0.4.4",
     "waitress>=3.0.2",

@@ -33,9 +33,16 @@ class Post(db.Model):
     user_id = db.Column(db.BigInteger, db.ForeignKey('users.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     status = db.Column(db.String(20), default='pending')
-    # NEW: Popularity Tracking
+    
+    # Existing Popularity Tracking
     likes = db.Column(db.Integer, default=0)
     views = db.Column(db.Integer, default=0)
+
+    # --- NEW: 3rd Party Data Storage (GitHub) ---
+    github_repo = db.Column(db.String(150), nullable=True)
+    github_stars = db.Column(db.Integer, default=0)
+    github_forks = db.Column(db.Integer, default=0)
+    last_sync = db.Column(db.DateTime, nullable=True)
 
     author = db.relationship('User', backref=db.backref('posts', lazy=True))
 
@@ -51,7 +58,12 @@ class Post(db.Model):
             "author_name": f"{self.author.first_name} {self.author.last_name}" if self.author else "Unknown",
             "created_at": self.created_at.isoformat(),
             "likes": self.likes,
-            "views": self.views
+            "views": self.views,
+            # Including new fields in the dictionary for the API response
+            "github_repo": self.github_repo,
+            "github_stars": self.github_stars,
+            "github_forks": self.github_forks,
+            "last_sync": self.last_sync.isoformat() if self.last_sync else None
         }
 
 # Logic tables for tracking interactions
@@ -63,14 +75,37 @@ class Comment(db.Model):
     post_id = db.Column(db.BigInteger, db.ForeignKey('posts.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    def to_dict(self):
+        return {
+            "id": str(self.id),
+            "content": self.content,
+            "user_id": str(self.user_id),
+            "post_id": str(self.post_id),
+            "created_at": self.created_at.isoformat()
+        }
+
 class Like(db.Model):
     __tablename__ = 'likes'
     id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     user_id = db.Column(db.BigInteger, db.ForeignKey('users.id'), nullable=False)
     post_id = db.Column(db.BigInteger, db.ForeignKey('posts.id'), nullable=False)
 
+    def to_dict(self):
+        return {
+            "id": str(self.id),
+            "user_id": str(self.user_id),
+            "post_id": str(self.post_id)
+        }
+
 class ReadLater(db.Model):
     __tablename__ = 'read_later'
     id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     user_id = db.Column(db.BigInteger, db.ForeignKey('users.id'), nullable=False)
     post_id = db.Column(db.BigInteger, db.ForeignKey('posts.id'), nullable=False)
+
+    def to_dict(self):
+        return {
+            "id": str(self.id),
+            "user_id": str(self.user_id),
+            "post_id": str(self.post_id)
+        }

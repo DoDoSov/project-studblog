@@ -204,3 +204,7 @@
 2026/05/05 00:14:00 [error] 35436#5104: *366 connect() failed (10061: No connection could be made because the target machine actively refused it) while connecting to upstream, client: 127.0.0.1, server: localhost, request: "GET /api/posts?limit=100 HTTP/1.1", upstream: "http://127.0.0.1:5000/api/posts?limit=100", host: "localhost", referrer: "http://localhost/login"
 2026/05/05 00:14:07 [error] 35436#5104: *366 connect() failed (10061: No connection could be made because the target machine actively refused it) while connecting to upstream, client: 127.0.0.1, server: localhost, request: "GET /api/posts?limit=100 HTTP/1.1", upstream: "http://127.0.0.1:5000/api/posts?limit=100", host: "localhost", referrer: "http://localhost/login"
 2026/05/05 21:40:49 [notice] 37628#33976: signal process started
+2026/05/06 00:35:21 [alert] 32416#32420: worker process 24644 exited with code C0000142
+2026/05/06 00:35:21 [alert] 32416#32420: could not respawn worker
+2026/05/06 09:48:04 [notice] 32892#7636: signal process started
+2026/05/06 10:28:28 [notice] 18028#25128: signal process started

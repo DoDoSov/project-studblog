@@ -2,15 +2,16 @@
   import { me as meApi } from '../../lib/api.js';
   import { authStore } from '../../lib/store.js';
 
-  // Standard variable declarations (Replaces $state)
   let firstName = '';
   let lastName  = '';
   let email     = '';
+  let newPassword = '';
+  let confirmPassword = '';
+  
   let loading   = true;
   let saving     = false;
   let msg       = '';
 
-  // Reactive logic for initial data fetch (Replaces $effect)
   $: if ($authStore.isLoggedIn) {
     loadUserData();
   } else {
@@ -31,31 +32,52 @@
   }
 
   async function handleSave() {
+    // Password match validation
+    if (newPassword && newPassword !== confirmPassword) {
+      msg = "Passwords do not match!";
+      return;
+    }
+
     saving = true;
     msg    = '';
     try {
-      await meApi.update({ first_name: firstName, last_name: lastName });
-      // Update global session in store
+      const payload = { 
+        first_name: firstName, 
+        last_name: lastName 
+      };
+
+      // Only include password if the user actually typed one
+      if (newPassword) {
+        payload.new_password = newPassword;
+      }
+
+      const response = await meApi.update(payload);
+      
+      // Sync the new name/surname to the global authStore
       authStore.setSession($authStore.token, { 
         ...$authStore.user, 
         first_name: firstName, 
         last_name: lastName 
       });
-      msg = 'Changes saved!';
+
+      msg = 'Profile updated successfully!';
+      
+      // Clear password fields after success
+      newPassword = '';
+      confirmPassword = '';
     } catch (err) {
-      msg = err.data?.msg ?? 'Save failed';
+      msg = err.data?.msg || err.data?.error || 'Save failed';
     } finally {
       saving = false;
     }
   }
 
-  // Reactive declaration for initials (Replaces $derived)
   $: initials = (firstName[0] ?? '') + (lastName[0] ?? '') || (email[0] ?? '?');
 </script>
 
 <div class="h-32"></div>
 
-<section class="max-w-5xl mx-auto px-6 mb-20 animate-in fade-in slide-in-from-bottom-6 duration-700">
+<section class="max-w-5xl mx-auto px-6 mb-20">
   {#if !$authStore.isLoggedIn}
     <div class="glass-panel py-20 text-center text-gray-400 rounded-[3rem]">
       Please log in to view account settings.
@@ -77,13 +99,14 @@
           {initials}
         </div>
         <h2 class="text-xl font-bold text-white mb-1">{firstName} {lastName}</h2>
-        <p class="text-xs text-blue-400 font-black uppercase tracking-widest mb-6">
+        <p class="text-xs text-blue-400 font-black uppercase tracking-widest">
           {$authStore.user?.role ?? 'Reader'}
         </p>
       </div>
 
       <!-- Settings Form -->
       <div class="lg:col-span-2 space-y-6">
+        <!-- Identity -->
         <div class="glass-panel p-8 rounded-[2.5rem]">
           <h3 class="text-sm font-bold text-white mb-6 uppercase tracking-wider flex items-center gap-2">
             <span class="size-2 bg-blue-500 rounded-full"></span> Public Profile
@@ -100,25 +123,33 @@
           </div>
         </div>
 
+        <!-- Password Change -->
         <div class="glass-panel p-8 rounded-[2.5rem]">
           <h3 class="text-sm font-bold text-white mb-6 uppercase tracking-wider flex items-center gap-2">
-            <span class="size-2 bg-green-500 rounded-full"></span> Contact Details
+            <span class="size-2 bg-red-500 rounded-full"></span> Change Password
           </h3>
-          <div class="flex flex-col gap-2">
-            <label class="text-[10px] text-white/40 uppercase font-black ml-1">Email Address</label>
-            <input value={email} readonly class="form-input-readonly" />
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="flex flex-col gap-2">
+              <label class="text-[10px] text-white/40 uppercase font-black ml-1">New Password</label>
+              <input type="password" bind:value={newPassword} class="form-input" placeholder="••••••••" />
+            </div>
+            <div class="flex flex-col gap-2">
+              <label class="text-[10px] text-white/40 uppercase font-black ml-1">Confirm New Password</label>
+              <input type="password" bind:value={confirmPassword} class="form-input" placeholder="••••••••" />
+            </div>
           </div>
         </div>
 
+        <!-- Feedback & Action -->
         {#if msg}
-          <p class="text-sm {msg.includes('saved') ? 'text-green-400' : 'text-red-400'} text-right font-bold animate-pulse">
+          <p class="text-sm {msg.includes('successfully') ? 'text-green-400' : 'text-red-400'} font-bold text-center px-4">
             {msg}
           </p>
         {/if}
 
-        <div class="flex justify-end gap-4">
-          <button on:click={handleSave} disabled={saving} class="primary-btn px-10">
-            {saving ? 'Saving…' : 'Save Changes'}
+        <div class="flex justify-end">
+          <button on:click={handleSave} disabled={saving} class="primary-btn px-12">
+            {saving ? 'Processing...' : 'Save All Changes'}
           </button>
         </div>
       </div>
@@ -133,16 +164,10 @@
     backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.08);
   }
-
   .form-input {
     @apply bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:ring-2 ring-blue-500/50 transition-all;
   }
-
-  .form-input-readonly {
-    @apply flex-grow bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white/30 outline-none cursor-not-allowed;
-  }
-
   .primary-btn {
-    @apply py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-500/10 transition-all active:scale-95;
+    @apply py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl text-sm font-bold transition-all active:scale-95;
   }
 </style>
