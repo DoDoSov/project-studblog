@@ -59,11 +59,6 @@
   async function save() {
     saving = true;
     saveError = '';
-
-    // --- UPDATED GITHUB LOGIC ---
-    // We now send github_repo as a clean, separate field to the backend.
-    // The backend regex logic will look for it in the content, so we 
-    // ensure the tag is present for the backend to sync properly.
     let cleanContent = content.replace(/\[github:\s*.*?\]/g, '').trim();
     let finalContent = cleanContent;
     if (github_repo.trim()) {
