@@ -33,12 +33,11 @@ class Post(db.Model):
     user_id = db.Column(db.BigInteger, db.ForeignKey('users.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     status = db.Column(db.String(20), default='pending')
-    
-    # Existing Popularity Tracking
+    # NEW: Popularity Tracking
     likes = db.Column(db.Integer, default=0)
     views = db.Column(db.Integer, default=0)
 
-    # --- NEW: 3rd Party Data Storage (GitHub) ---
+    # 3rd Party Data (GitHub)
     github_repo = db.Column(db.String(150), nullable=True)
     github_stars = db.Column(db.Integer, default=0)
     github_forks = db.Column(db.Integer, default=0)
@@ -59,7 +58,6 @@ class Post(db.Model):
             "created_at": self.created_at.isoformat(),
             "likes": self.likes,
             "views": self.views,
-            # Including new fields in the dictionary for the API response
             "github_repo": self.github_repo,
             "github_stars": self.github_stars,
             "github_forks": self.github_forks,

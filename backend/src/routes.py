@@ -6,7 +6,7 @@ from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_requir
 
 api = Blueprint('api', __name__)
 
-# ── Helper for GitHub API (Now saves to DB to meet assignment reqs) ──────────
+# ── GitHub Sync Helper ────────────────────────────────────────────────────────
 
 def sync_github_data(post, repo_path=None):
     """
@@ -17,16 +17,13 @@ def sync_github_data(post, repo_path=None):
     1. Explicit repo_path argument (sent directly from the form field)
     2. [github: user/repo] tag embedded in post content (legacy fallback)
     """
-    # 1. Use the explicitly provided field first
     if not repo_path:
-        # 2. Fall back to scanning content for the embedded tag
         match = re.search(r'\[github:\s*([\w.\-]+/[\w.\-]+)\]', post.content or '')
         repo_path = match.group(1).strip() if match else None
 
     if repo_path:
         post.github_repo = repo_path
         try:
-            # Step 1: Retrieve from 3rd party server (GitHub API)
             response = requests.get(
                 f"https://api.github.com/repos/{repo_path}",
                 headers={"Accept": "application/vnd.github+json"},
@@ -34,7 +31,6 @@ def sync_github_data(post, repo_path=None):
             )
             if response.status_code == 200:
                 data = response.json()
-                # Step 2: Save retrieved data to your CockroachDB database
                 post.github_stars = data.get('stargazers_count', 0)
                 post.github_forks = data.get('forks_count', 0)
                 post.last_sync = datetime.datetime.utcnow()
@@ -43,7 +39,6 @@ def sync_github_data(post, repo_path=None):
         except Exception as e:
             print(f"GitHub Sync Error: {e}")
     else:
-        # No repo provided — clear any previously stored GitHub data
         post.github_repo = None
         post.github_stars = 0
         post.github_forks = 0
@@ -100,12 +95,15 @@ def update_me():
     user = User.query.get_or_404(user_id)
     data = request.get_json()
 
+    # Update Name/Surname
     if 'first_name' in data:
         user.first_name = data.get('first_name')
     if 'last_name' in data:
         user.last_name = data.get('last_name')
 
+    # Update Password (The missing part!)
     if 'new_password' in data and data.get('new_password').strip():
+        # Hash the new password before storing it
         user.password_hash = generate_password_hash(data.get('new_password'), method='pbkdf2:sha256')
 
     try:
@@ -134,9 +132,17 @@ def get_posts():
     if limit: query = query.limit(limit)
         
     posts = query.all()
-    
-    # Returning data retrieved from the database
-    return jsonify([p.to_dict() for p in posts]), 200
+    return jsonify([{
+        "id": str(p.id), # Fixed: cast to string[cite: 3]
+        "title": p.title,
+        "category": p.category,
+        "banner_url": p.banner_url, 
+        "description": p.description,
+        "content": p.content,
+        "status": p.status,
+        "created_at": p.created_at.isoformat() if p.created_at else None,
+        "author": f"{p.author.first_name} {p.author.last_name}".strip() if p.author else "Anonymous"
+    } for p in posts]), 200
 
 @api.route('/posts/<post_id>', methods=['GET'])
 def get_post(post_id):
@@ -146,9 +152,17 @@ def get_post(post_id):
         return jsonify({"error": "Invalid ID"}), 400
         
     p = Post.query.get_or_404(numeric_id)
-
-    # Returns data from DB (including github_stars/forks)
-    return jsonify(p.to_dict()), 200
+    return jsonify({
+        "id": str(p.id), # Fixed: cast to string[cite: 3]
+        "title": p.title,
+        "category": p.category,
+        "banner_url": p.banner_url, 
+        "description": p.description,
+        "content": p.content,
+        "status": p.status,
+        "created_at": p.created_at.isoformat() if p.created_at else None,
+        "author": f"{p.author.first_name} {p.author.last_name}".strip() if p.author else "Anonymous"
+    }), 200
 
 @api.route('/posts', methods=['POST'])
 @jwt_required()
@@ -165,11 +179,8 @@ def create_post():
         user_id=user_id,
         status='pending'
     )
-    
-    # Read the direct github_repo field sent from the form, then sync with GitHub API
     repo_field = data.get('github_repo', '').strip() or None
     sync_github_data(post, repo_path=repo_field)
-    
     db.session.add(post)
     db.session.commit()
     return jsonify({"msg": "Post submitted for review", "id": str(post.id)}), 201
@@ -197,14 +208,9 @@ def update_post(post_id):
     
     post.title = data.get('title', post.title)
     post.content = data.get('content', post.content)
-    post.category = data.get('category', post.category)
-    post.description = data.get('description', post.description)
-    post.banner_url = data.get('banner_url', post.banner_url)
     
-    # Re-sync GitHub data — prefer the explicit field, fall back to content scan
     repo_field = data.get('github_repo', '').strip() or None
     sync_github_data(post, repo_path=repo_field)
-    
     db.session.commit()
     return jsonify({
         "msg": "Post updated successfully", 
@@ -217,7 +223,13 @@ def update_post(post_id):
 def my_posts():
     user_id = int(get_jwt_identity())
     posts = Post.query.filter_by(user_id=user_id).order_by(Post.created_at.desc()).all()
-    return jsonify([p.to_dict() for p in posts]), 200
+    return jsonify([{
+        "id": str(p.id),
+        "title": p.title,
+        "category": p.category,
+        "status": p.status,
+        "created_at": p.created_at.isoformat() if p.created_at else None
+    } for p in posts]), 200
 
 # ── Admin Routes ──────────────────────────────────────────────────────────────
 
@@ -233,7 +245,13 @@ def admin_pending_posts():
         return jsonify({"msg": "Admin access required"}), 403
     
     posts = Post.query.filter_by(status='pending').order_by(Post.created_at.desc()).all()
-    return jsonify([p.to_dict() for p in posts]), 200
+    return jsonify([{
+        "id": str(p.id), # Precision safe[cite: 3]
+        "title": p.title,
+        "category": p.category,
+        "content": p.description or p.content[:100],
+        "author_name": f"{p.author.first_name} {p.author.last_name}" if p.author else "Unknown"
+    } for p in posts]), 200
 
 @api.route('/admin/posts/all', methods=['GET'])
 @jwt_required()
@@ -242,7 +260,14 @@ def get_all_posts_admin():
         return jsonify({"msg": "Admin access required"}), 403
     
     posts = Post.query.order_by(Post.created_at.desc()).all()
-    return jsonify([p.to_dict() for p in posts]), 200
+    return jsonify([{
+        "id": str(p.id), # Precision safe[cite: 3]
+        "title": p.title,
+        "status": p.status,
+        "category": p.category,
+        "author_name": f"{p.author.first_name} {p.author.last_name}" if p.author else "Unknown",
+        "created_at": p.created_at.isoformat() if p.created_at else None
+    } for p in posts]), 200
 
 @api.route('/posts/<post_id>', methods=['DELETE'])
 @jwt_required()

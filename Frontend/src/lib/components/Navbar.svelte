@@ -89,6 +89,7 @@
     </div>
 
     <div class="flex items-center gap-2 md:gap-3">
+  
       <form class="relative flex items-center" on:submit|preventDefault={submitSearch}>
         <input 
           type="text" 
@@ -97,9 +98,7 @@
           id="nav-search"
           class="search-input rounded-full py-1.5 pl-9 pr-4 text-sm outline-none w-24 sm:w-40 lg:w-48 focus:w-44 sm:focus:w-56 lg:focus:w-64 transition-all duration-300 text-white placeholder:text-gray-500 border border-white/5 focus:border-blue-500/50"
         />
-        <label for="nav-search" class="absolute left-3 flex items-center pointer-events-none opacity-40">
-          <span class="text-sm">⌕</span>
-        </label>
+        
       </form>
 
       <!-- Accessibility Menu -->

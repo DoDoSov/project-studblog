@@ -99,9 +99,10 @@ export const posts = {
 };
 
 export const admin = {
-  users:    () => request('GET', '/admin/users'),
-  pending:  () => request('GET', '/admin/posts/pending'),
-  allPosts: () => request('GET', '/admin/posts/all'),
+  users:       () => request('GET',  '/admin/users'),
+  pending:     () => request('GET',  '/admin/posts/pending'),
+  allPosts:    () => request('GET',  '/admin/posts/all'),
+  fixStatuses: () => request('POST', '/admin/fix-statuses'),
 };
 
 export const info = {

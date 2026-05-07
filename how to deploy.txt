@@ -1,0 +1,19 @@
+AUTOMATED INSTALLATION:
+
+1. Install Podman/Docker Container with podman-compose.yaml
+2. Install Proxy-Server : Nginx via package manager or download binaries for Unix/Linux based OR download binaries from official website for Windows Server. 
+3. Install Database : CockroachDB as CloudDB (Paid Enterprise Solution), as binaries for Linux/Unix/Windows or as package for Unix/Windows (https://www.cockroachlabs.com/docs/releases/#major-versions). (for production requires SSL)
+4. Recreate DB structure using "Technical Specification".
+5. Copy nginx.conf from repository and change the "serving html" directory with required IP.
+
+OR STANDALONE INSTALLATION:
+
+1. Install Proxy-Server : Nginx via package manager or download binaries for Unix/Linux based OR download binaries from official website for Windows Server. (https://nginx.org/en/docs/install.html) (or as alternative build from source is possible).
+2. Install Database : CockroachDB as CloudDB (Paid Enterprise Solution), as binaries for Linux/Unix/Windows or as package for Unix/Windows (https://www.cockroachlabs.com/docs/releases/#major-versions). (for production requires SSL)
+3. Recreate DB structure using "Technical Specification".
+4. Install UV python package manager as a package for Linux/Unix/Windows (via Chocolate, Winget, etc.) (https://docs.astral.sh/uv/getting-started/installation/#installation-methods)
+5. Install NodeJS with npm (https://nodejs.org/en/download)
+6. Copy <Backend> and <Frontend> folders into project folder.
+7. Build "serving html/js/css" files ("dict" folder) with npm inside <Frontend> directory.
+8. Copy nginx.conf from repository and change the "serving html" directory with required IP.
+9. Run the project as written in "how to run".txt, but with SSL keys.
